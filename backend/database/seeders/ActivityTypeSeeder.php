@@ -16,11 +16,15 @@ class ActivityTypeSeeder extends Seeder
         DB::table('activity_types')->insert([
             [
                 'name' => 'Desarrollo',
-                'description' => 'Desarrollo de tarjetas'
+                'description' => 'Desarrollo de tarjetas',
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now()
             ],
             [
                 'name' => 'Documentación',
-                'description' => 'Documentación de tarjetas'
+                'description' => 'Documentación de tarjetas',
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now()
             ],
             [
                 'name' => 'Pruebas',
