@@ -5,7 +5,6 @@ namespace App\Http\Controllers\DailyPlan;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDailyPlanRequest;
 use App\Models\DailyPlan;
-use Illuminate\Http\Request;
 
 class DailyPlanController extends Controller
 {
@@ -14,6 +13,14 @@ class DailyPlanController extends Controller
 
         $daily = DailyPlan::create($validated_data);
 
-        return response()->json($daily, 201);
+        return response()->json([
+            'id' => $daily->id,
+            'date' => $daily->date,
+            'activity_type_id' => $daily->activity_type_id,
+            'assigned_to' => $daily->assigned_to,
+            'card_id' => $daily->card_id,
+            'estimated_minutes' => $daily->estimated_minutes,
+            'real_minutes' => $daily->real_minutes,
+        ], 201);
     }
 }

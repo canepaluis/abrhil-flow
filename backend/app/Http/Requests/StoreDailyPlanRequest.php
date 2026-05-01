@@ -24,9 +24,9 @@ class StoreDailyPlanRequest extends FormRequest
     {
         return [
             'date' => 'required|date',
-            'activity_type_id' => 'required|integer',
-            'assigned_to' => 'required|integer',
-            'card_id' => 'integer',
+            'activity_type_id' => 'required|integer|exists:activity_types,id',
+            'assigned_to' => 'required|integer|exists:users,id',
+            'card_id' => 'nullable|integer',
             'estimated_minutes' => 'integer',
             'real_minutes' => 'integer'
         ];
