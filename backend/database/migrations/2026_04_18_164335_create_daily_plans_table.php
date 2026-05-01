@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('daily_plans', function (Blueprint $table) {
             $table->id();
-            $table->date('date')->unique();
+            $table->date('date');
             $table->foreignId('activity_type_id')->constrained()->cascadeOnDelete();
             $table->foreignId('assigned_to')->constrained('users')->cascadeOnDelete();
             $table->unsignedBigInteger('card_id')->nullable();
