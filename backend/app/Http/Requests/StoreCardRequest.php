@@ -24,7 +24,7 @@ class StoreCardRequest extends FormRequest
     {
         return [
             'title' => 'required|string',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
             'team_id' => 'required|integer|exists:teams,id',
             'platform_id' => 'required|integer|exists:platforms,id',
             'project_id' => 'required|integer|exists:projects,id',
