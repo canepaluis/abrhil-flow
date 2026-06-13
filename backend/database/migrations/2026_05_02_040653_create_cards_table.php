@@ -14,17 +14,17 @@ return new class extends Migration
         Schema::create('cards', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->string('description')->nullable();
+            $table->string('description');
             $table->string('jira_link')->nullable();
-            $table->integer('priority')->unsigned();
+            $table->integer('priority')->unsigned()->nullable();
             $table->foreignId('card_type_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('assigned_to')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('module_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('assigned_to')->nullable()->constrained('users')->cascadeOnDelete();
+            $table->foreignId('module_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('project_id')->constrained()->cascadeOnDelete();
             $table->foreignId('team_id')->constrained()->cascadeOnDelete();
             $table->foreignId('platform_id')->constrained()->cascadeOnDelete();
             $table->foreignId('status_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('creator_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('creator_id')->nullable()->constrained('users')->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });
