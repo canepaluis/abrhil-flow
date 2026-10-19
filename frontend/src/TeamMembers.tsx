@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { request } from './api'
 import './TeamMembers.css'
-
-type TeamMember = { id: number; name: string; roles: { id: number; slug: string; name: string }[]; responsibilities: string[] }
+import type { TeamMember } from './team'
+import UserTimeOff from './UserTimeOff'
 
 export default function TeamMembers() {
   const [users, setUsers] = useState<TeamMember[]>([])
@@ -28,7 +28,7 @@ export default function TeamMembers() {
     <div className="section-heading"><h2>Usuarios y roles</h2><button className="text-button" disabled={loading} onClick={() => void load()}>Actualizar</button></div>
     <div className="team-filters"><label>Buscar persona o responsabilidad<input type="search" placeholder="Ej. Fernando, planeación o testing…" value={query} onChange={e => setQuery(e.target.value)} /></label><label>Rol<select value={role} onChange={e => setRole(e.target.value)}><option value="">Todos los roles</option>{roles.map(item => <option key={item.slug} value={item.slug}>{item.name}</option>)}</select></label></div>
     {error && <p className="notice error" role="alert">{error}</p>}
-    {loading ? <p className="empty" role="status">Cargando equipo…</p> : !error && <div className="team-grid">{visible.map(user => <article className="card team-member" key={user.id}><div className="team-person"><span className="team-avatar" aria-hidden="true">{user.name.split(' ').slice(0, 2).map(part => part[0]).join('')}</span><h3>{user.name}</h3></div><div className="team-roles" aria-label="Roles">{user.roles.map(item => <span className="badge" key={item.slug}>{item.name}</span>)}{user.roles.length === 0 && <span className="helper">Sin roles definidos</span>}</div><h4>Responsabilidades</h4>{user.responsibilities.length ? <ul>{user.responsibilities.map(item => <li key={item}>{item}</li>)}</ul> : <p className="helper">Pendientes de definir.</p>}</article>)}</div>}
+    {loading ? <p className="empty" role="status">Cargando equipo…</p> : !error && <div className="team-grid">{visible.map(user => <article className="card team-member" key={user.id}><div className="team-person"><span className="team-avatar" aria-hidden="true">{user.name.split(' ').slice(0, 2).map(part => part[0]).join('')}</span><h3>{user.name}</h3></div><div className="team-roles" aria-label="Roles">{user.roles.map(item => <span className="badge" key={item.slug}>{item.name}</span>)}{user.roles.length === 0 && <span className="helper">Sin roles definidos</span>}</div><h4>Responsabilidades</h4>{user.responsibilities.length ? <ul>{user.responsibilities.map(item => <li key={item}>{item}</li>)}</ul> : <p className="helper">Pendientes de definir.</p>}<UserTimeOff user={user} onUpdated={periods => setUsers(current => current.map(item => item.id === user.id ? { ...item, time_off: periods } : item))} /></article>)}</div>}
     {!loading && !error && visible.length === 0 && <p className="empty">No hay integrantes con estos filtros.</p>}
     <p className="helper team-note">Una persona puede tener varios roles. Las responsabilidades describen su trabajo; los permisos de acceso se definirán al incorporar el inicio de sesión.</p>
   </>

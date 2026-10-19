@@ -20,6 +20,7 @@ class CardSummaryResource extends JsonResource
             'jira_link' => $this->jira_link,
             'priority' => $this->priority,
             'assigned_to' => [
+                'id' => $this->assigned_to,
                 'name' => $this->assignedTo?->name,
                 'email' => $this->assignedTo?->email
             ],

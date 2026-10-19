@@ -13,12 +13,12 @@ class SprintController extends Controller
 {
     public function index()
     {
-        return SprintResource::collection(Sprint::with(['cards.assignedTo', 'cards.status', 'cards.cardType'])->orderByDesc('start_date')->orderByDesc('id')->get());
+        return SprintResource::collection(Sprint::with(['cards.assignedTo.timeOffs', 'cards.status', 'cards.cardType', 'participants.timeOffs'])->orderByDesc('start_date')->orderByDesc('id')->get());
     }
 
     public function show(Sprint $sprint)
     {
-        return new SprintResource($sprint->load(['cards.assignedTo', 'cards.status', 'cards.cardType']));
+        return new SprintResource($sprint->load(['cards.assignedTo.timeOffs', 'cards.status', 'cards.cardType', 'participants.timeOffs']));
     }
 
     public function store(SaveSprintRequest $request)
@@ -49,9 +49,12 @@ class SprintController extends Controller
                 throw ValidationException::withMessages(['start_date' => $message, 'end_date' => $message]);
             }
             $cards = $data['cards'];
-            unset($data['cards']);
+            $participants = $data['participant_ids'];
+            unset($data['cards'], $data['participant_ids']);
+            $data['members_count'] = count($participants);
             $data['working_days'] = array_map('intval', $data['working_days']);
             $sprint->fill($data)->save();
+            $sprint->participants()->sync($participants);
             $pivot = [];
             foreach ($cards as $card) {
                 $pivot[$card['id']] = array_intersect_key($card, array_flip(['start_date', 'end_date', 'estimated_minutes', 'is_completed']));
@@ -59,6 +62,6 @@ class SprintController extends Controller
             $sprint->cards()->sync($pivot);
         });
 
-        return new SprintResource($sprint->load(['cards.assignedTo', 'cards.status', 'cards.cardType']));
+        return new SprintResource($sprint->load(['cards.assignedTo.timeOffs', 'cards.status', 'cards.cardType', 'participants.timeOffs']));
     }
 }

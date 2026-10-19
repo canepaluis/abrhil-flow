@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Card;
 use App\Models\Sprint;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -111,6 +112,7 @@ class SprintOverviewTest extends TestCase
             'name' => 'Histórico', 'start_date' => '2026-10-05', 'end_date' => '2026-10-16',
             'members_count' => 1, 'daily_minutes' => 480, 'working_days' => [1, 2, 3, 4, 5],
             'cards' => [['id' => $card->id, 'start_date' => '2026-10-05', 'end_date' => '2026-10-07', 'estimated_minutes' => 180, 'is_completed' => true]],
+            'participant_ids' => [User::factory()->create()->id],
         ];
         $id = $this->postJson('/api/sprints', $plan)->assertCreated()->assertJsonPath('data.completed_cards', 1)->json('data.id');
         $this->sprint();

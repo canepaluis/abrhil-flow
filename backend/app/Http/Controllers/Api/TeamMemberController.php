@@ -10,6 +10,6 @@ class TeamMemberController extends Controller
 {
     public function index()
     {
-        return TeamMemberResource::collection(User::with('roles')->orderBy('name')->get());
+        return TeamMemberResource::collection(User::with(['roles', 'timeOffs'])->orderBy('name')->get());
     }
 }

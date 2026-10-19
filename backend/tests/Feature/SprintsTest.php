@@ -30,6 +30,7 @@ class SprintsTest extends TestCase
             'start_date' => '2026-10-19', 'end_date' => '2026-10-30',
             'members_count' => 2, 'daily_minutes' => 480, 'working_days' => [1, 2, 3, 4, 5],
             'cards' => [],
+            'participant_ids' => \App\Models\User::factory()->count(2)->create()->modelKeys(),
         ];
     }
 

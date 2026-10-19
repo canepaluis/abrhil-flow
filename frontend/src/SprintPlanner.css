@@ -38,5 +38,12 @@
 .schedule-row span, .schedule-row small { display: block; font-size: 11px; color: #61756b; margin: 8px 0; }
 .timeline-track { background: #e9efea; height: 9px; border-radius: 5px; overflow: hidden; margin: 14px 0; }
 .timeline-bar { background: #42866a; height: 100%; border-radius: 5px; }
+.participant-picker { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 0; }
+.participant-picker label { display: flex; gap: 6px; align-items: center; background: #f0f5f0; padding: 8px; border-radius: 6px; }
+.participant-picker input { width: auto; margin: 0; accent-color: #246c55; }
+.sprint-availability { margin: 16px 0; }
+.sprint-availability summary { font-size: 12px; color: #246c55; cursor: pointer; margin: 12px 0; }
+.availability-member { border-bottom: 1px solid #e3eae4; padding: 12px 0; font-size: 12px; }
+.task-availability { margin-bottom: 12px; }
 @media (max-width: 1050px) { .sprint-layout { grid-template-columns: minmax(0, 1fr); } .sprint-saved { order: -1; } }
 @media (max-width: 420px) { .module-nav button { padding: 10px; font-size: 12px; } .plan-fields { grid-template-columns: 1fr; } .metrics > div { padding: 10px; } }

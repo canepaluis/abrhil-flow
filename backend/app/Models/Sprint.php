@@ -32,4 +32,9 @@ class Sprint extends Model
         }
         return $dates;
     }
+
+    public function participants(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'sprint_user');
+    }
 }

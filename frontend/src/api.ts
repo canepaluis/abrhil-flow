@@ -1,6 +1,6 @@
 export type Option = { id: number; name: string; team_id?: number }
 export type Catalogs = Record<'teams' | 'projects' | 'platforms' | 'statuses' | 'card_types' | 'modules' | 'users', Option[]>
-export type Card = { id: number; title: string; priority: number | null; assigned_to: { name: string | null }; status: { name: string | null }; card_type: { name: string | null } }
+export type Card = { id: number; title: string; priority: number | null; assigned_to: { id: number | null; name: string | null }; status: { name: string | null }; card_type: { name: string | null } }
 export class ApiError extends Error {
   errors: Record<string, string[]>
   constructor(message: string, errors: Record<string, string[]> = {}) { super(message); this.errors = errors }

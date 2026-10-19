@@ -55,7 +55,7 @@ class TeamMembersTest extends TestCase
         $this->seed(TeamMemberSeeder::class);
         $response = $this->getJson('/api/users')->assertOk()->assertJsonCount(4, 'data');
         foreach ($response->json('data') as $user) {
-            $this->assertEqualsCanonicalizing(['id', 'name', 'roles', 'responsibilities'], array_keys($user));
+            $this->assertEqualsCanonicalizing(['id', 'name', 'roles', 'responsibilities', 'time_off'], array_keys($user));
         }
         $this->getJson('/api/card-catalogs')->assertOk()->assertJsonCount(4, 'data.users');
     }

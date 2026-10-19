@@ -24,7 +24,7 @@ class SprintOverviewController extends Controller
             $sprint = null;
         }
         return response()->json([
-            'data' => $sprint ? (new SprintResource($sprint->load(['cards.assignedTo', 'cards.status', 'cards.cardType'])))->resolve() : null,
+            'data' => $sprint ? (new SprintResource($sprint->load(['cards.assignedTo.timeOffs', 'cards.status', 'cards.cardType', 'participants.timeOffs'])))->resolve() : null,
             'mode' => $manualId ? 'manual' : 'automatic',
             'today' => $today,
             'timezone' => config('sprints.timezone'),
@@ -43,7 +43,7 @@ class SprintOverviewController extends Controller
 
     public function history()
     {
-        return SprintResource::collection(Sprint::with(['cards.assignedTo', 'cards.status', 'cards.cardType'])
+        return SprintResource::collection(Sprint::with(['cards.assignedTo.timeOffs', 'cards.status', 'cards.cardType', 'participants.timeOffs'])
             ->where('end_date', '<', $this->today())->orderByDesc('end_date')->orderByDesc('id')->get());
     }
 
@@ -52,6 +52,6 @@ class SprintOverviewController extends Controller
         $data = $request->validate(['is_completed' => 'required|boolean']);
         abort_unless($sprint->cards()->where('cards.id', $card)->exists(), 404);
         $sprint->cards()->updateExistingPivot($card, ['is_completed' => $data['is_completed']]);
-        return new SprintResource($sprint->load(['cards.assignedTo', 'cards.status', 'cards.cardType']));
+        return new SprintResource($sprint->load(['cards.assignedTo.timeOffs', 'cards.status', 'cards.cardType', 'participants.timeOffs']));
     }
 }

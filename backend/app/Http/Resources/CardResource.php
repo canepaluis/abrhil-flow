@@ -25,6 +25,7 @@ class CardResource extends JsonResource
                 'description' => $this->cardType?->description
             ],
             'assigned_to' => [
+                'id' => $this->assigned_to,
                 'name' => $this->assignedTo?->name,
                 'email' => $this->assignedTo?->email
             ],
