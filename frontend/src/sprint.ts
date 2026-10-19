@@ -3,14 +3,16 @@ export type PlannedCard = {
   archived: boolean; start_date: string; end_date: string; estimated_minutes: number
   is_completed: boolean; description: string; priority: number | null; jira_link: string | null; card_type: string | null
   assigned_to_id: number | null; absence_dates: string[]; available_minutes: number | null; planning_warnings: string[]
+  capacity_scope: 'development' | 'other' | 'unclassified'
 }
 export type Sprint = {
   id: number; name: string; goal: string | null; start_date: string; end_date: string
   members_count: number; daily_minutes: number; working_days: number[]; working_dates: string[]
   capacity_minutes: number; estimated_minutes: number; remaining_minutes: number; cards: PlannedCard[]
   completed_cards: number; completed_minutes: number
+  developer_count: number; development_estimated_minutes: number; other_estimated_minutes: number; unclassified_estimated_minutes: number
   gross_capacity_minutes: number; absence_minutes: number; requires_participants: boolean; planning_warnings: string[]
-  participants: { id: number; name: string; absent_dates: string[]; available_minutes: number; estimated_minutes: number }[]
+  participants: { id: number; name: string; absent_dates: string[]; available_minutes: number; estimated_minutes: number; counts_toward_capacity: boolean }[]
 }
 export type DraftCard = { id: number; title: string; start_date: string; end_date: string; hours: string; is_completed: boolean; assigned_to_id: number | null }
 export type SprintDraft = {

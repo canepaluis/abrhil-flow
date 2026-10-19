@@ -42,4 +42,12 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    public function developer(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $role = \App\Models\Role::firstOrCreate(['slug' => 'developer'], ['name' => 'Desarrollador']);
+            $user->roles()->syncWithoutDetaching([$role->id]);
+        });
+    }
 }

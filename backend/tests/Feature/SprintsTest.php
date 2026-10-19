@@ -30,7 +30,7 @@ class SprintsTest extends TestCase
             'start_date' => '2026-10-19', 'end_date' => '2026-10-30',
             'members_count' => 2, 'daily_minutes' => 480, 'working_days' => [1, 2, 3, 4, 5],
             'cards' => [],
-            'participant_ids' => \App\Models\User::factory()->count(2)->create()->modelKeys(),
+            'participant_ids' => \App\Models\User::factory()->developer()->count(2)->create()->modelKeys(),
         ];
     }
 
@@ -39,6 +39,7 @@ class SprintsTest extends TestCase
         $card = $this->card();
         $plan = $this->plan();
         $plan['cards'] = [['id' => $card->id, 'start_date' => '2026-10-19', 'end_date' => '2026-10-21', 'estimated_minutes' => 720]];
+        $card->update(['assigned_to' => $plan['participant_ids'][0]]);
         $created = $this->postJson('/api/sprints', $plan)->assertCreated()
             ->assertJsonPath('data.capacity_minutes', 9600)
             ->assertJsonPath('data.estimated_minutes', 720)
@@ -85,6 +86,7 @@ class SprintsTest extends TestCase
         $card = $this->card();
         $plan = $this->plan();
         $plan['working_days'] = [6];
+        $card->update(['assigned_to' => $plan['participant_ids'][0]]);
         $plan['cards'] = [['id' => $card->id, 'start_date' => '2026-10-24', 'end_date' => '2026-10-24', 'estimated_minutes' => 1200]];
         $this->postJson('/api/sprints', $plan)->assertCreated()
             ->assertJsonPath('data.capacity_minutes', 960)->assertJsonPath('data.remaining_minutes', -240);

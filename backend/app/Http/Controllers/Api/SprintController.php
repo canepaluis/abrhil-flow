@@ -13,12 +13,12 @@ class SprintController extends Controller
 {
     public function index()
     {
-        return SprintResource::collection(Sprint::with(['cards.assignedTo.timeOffs', 'cards.status', 'cards.cardType', 'participants.timeOffs'])->orderByDesc('start_date')->orderByDesc('id')->get());
+        return SprintResource::collection(Sprint::with(['cards.assignedTo.timeOffs', 'cards.status', 'cards.cardType', 'participants.timeOffs', 'participants.roles', 'cards.assignedTo.roles'])->orderByDesc('start_date')->orderByDesc('id')->get());
     }
 
     public function show(Sprint $sprint)
     {
-        return new SprintResource($sprint->load(['cards.assignedTo.timeOffs', 'cards.status', 'cards.cardType', 'participants.timeOffs']));
+        return new SprintResource($sprint->load(['cards.assignedTo.timeOffs', 'cards.status', 'cards.cardType', 'participants.timeOffs', 'participants.roles', 'cards.assignedTo.roles']));
     }
 
     public function store(SaveSprintRequest $request)
@@ -62,6 +62,6 @@ class SprintController extends Controller
             $sprint->cards()->sync($pivot);
         });
 
-        return new SprintResource($sprint->load(['cards.assignedTo.timeOffs', 'cards.status', 'cards.cardType', 'participants.timeOffs']));
+        return new SprintResource($sprint->load(['cards.assignedTo.timeOffs', 'cards.status', 'cards.cardType', 'participants.timeOffs', 'participants.roles', 'cards.assignedTo.roles']));
     }
 }
