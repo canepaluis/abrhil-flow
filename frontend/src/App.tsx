@@ -5,6 +5,7 @@ import type { Card, Catalogs } from './api'
 import './App.css'
 import SprintPlanner from './SprintPlanner'
 import SprintOverview from './SprintOverview'
+import TeamMembers from './TeamMembers'
 
 const initial = { title: '', description: '', team_id: '', project_id: '', platform_id: '', status_id: '', card_type_id: '', assigned_to: '', module_id: '', priority: '', jira_link: '' }
 const selects = [
@@ -15,7 +16,7 @@ const selects = [
 ] as const
 
 function App() {
-  const [page, setPage] = useState<'home' | 'cards' | 'sprints' | 'history'>('home')
+  const [page, setPage] = useState<'home' | 'cards' | 'sprints' | 'history' | 'users'>('home')
   const [cards, setCards] = useState<Card[]>([])
   const [catalogs, setCatalogs] = useState<Catalogs | null>(null)
   const [form, setForm] = useState(initial)
@@ -71,8 +72,9 @@ function App() {
           <button aria-current={page === 'cards' ? 'page' : undefined} onClick={() => setPage('cards')}>Tarjetas</button>
           <button aria-current={page === 'sprints' ? 'page' : undefined} onClick={() => setPage('sprints')}>Planeación de sprints</button>
           <button aria-current={page === 'history' ? 'page' : undefined} onClick={() => setPage('history')}>Historial</button>
+          <button aria-current={page === 'users' ? 'page' : undefined} onClick={() => setPage('users')}>Equipo</button>
         </nav>
-        {page === 'home' || page === 'history' ? <SprintOverview key={page} history={page === 'history'} onPlan={() => setPage('sprints')} /> : page === 'sprints' ? <SprintPlanner /> : <>
+        {page === 'users' ? <TeamMembers /> : page === 'home' || page === 'history' ? <SprintOverview key={page} history={page === 'history'} onPlan={() => setPage('sprints')} /> : page === 'sprints' ? <SprintPlanner /> : <>
         <div className="page-heading"><div><p className="eyebrow">TU EQUIPO, EN MOVIMIENTO</p><h1>Un lugar para cada tarea.</h1><p>Organiza las cards de tu equipo y convierte los pendientes en avances.</p></div><span className="count">{loading ? '…' : cards.length} cards</span></div>
         {loadError && <div className="notice error" role="alert">{loadError} <button onClick={() => void load()}>Reintentar</button></div>}
         {success && <div className="notice success" role="status">{success}</div>}
