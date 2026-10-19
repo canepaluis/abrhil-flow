@@ -72,4 +72,10 @@ POST/PUT /api/sprints requiere `participant_ids`: array no vacío de IDs de usua
 
 Los recursos Sprint incluyen gross_capacity_minutes, absence_minutes, capacity_minutes (neta), requires_participants, participants y planning_warnings. Cada participante incluye id, name, absent_dates, available_minutes y estimated_minutes. Cada tarjeta incluye assigned_to_id, absence_dates, available_minutes y planning_warnings. La API de tarjetas agrega assigned_to.id, sin cambiar assigned_to.name.
 
-Se descuentan días laborables únicos por participante. Los avisos de disponibilidad no bloquean el guardado ni reprograman las tarjetas. Todas las consultas de sprints recalculan la capacidad con las ausencias activas actuales, también para sprints pasados. Los sprints anteriores sin participantes mantienen su capacidad provisional y requieren configuración explícita.
+Solo los participantes con rol developer aportan capacidad de desarrollo; se descuentan sus días laborables ausentes una sola vez. Los avisos de disponibilidad no bloquean el guardado ni reprograman las tarjetas. Todas las consultas de sprints recalculan la capacidad con las ausencias activas actuales, también para sprints pasados. Los sprints anteriores sin participantes devuelven capacidad de desarrollo cero y requieren configuración explícita.
+
+## Alcance de la capacidad de desarrollo
+
+capacity_minutes, gross_capacity_minutes y absence_minutes se refieren exclusivamente a participantes con rol developer. developer_count indica cuántos aportan capacidad; los roles múltiples no duplican horas. participants[].counts_toward_capacity indica si su disponibilidad se suma al total de desarrollo. Se mantiene la disponibilidad individual de testers y otros roles como información separada.
+
+estimated_minutes conserva el esfuerzo total de todas las tarjetas. development_estimated_minutes suma el esfuerzo asignado a desarrolladores; other_estimated_minutes, el asignado a otros roles definidos; unclassified_estimated_minutes, el de tarjetas sin responsable o sin roles definidos. remaining_minutes = capacity_minutes - development_estimated_minutes. Las tres categorías suman estimated_minutes. cards[].capacity_scope identifica development, other o unclassified. Un desarrollador que no sea participante aporta demanda, pero no capacidad, y conserva el aviso de no pertenecer al sprint.
