@@ -27,6 +27,7 @@ class SaveSprintRequest extends FormRequest
             'cards' => 'present|array|max:500',
             'cards.*.id' => ['required', 'integer', 'distinct', Rule::exists('cards', 'id')->whereNull('deleted_at')],
             'cards.*.estimated_minutes' => 'required|integer|min:1|max:1000000',
+            'cards.*.is_completed' => 'sometimes|boolean',
             'cards.*.start_date' => 'required|date_format:Y-m-d|after_or_equal:start_date|before_or_equal:end_date',
             'cards.*.end_date' => 'required|date_format:Y-m-d|after_or_equal:cards.*.start_date|before_or_equal:end_date',
         ];

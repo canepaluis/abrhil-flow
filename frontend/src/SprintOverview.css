@@ -1,0 +1,28 @@
+.module-nav { flex-wrap: wrap; }
+.overview-toolbar { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 20px; font-size: 12px; color: #61756b; }
+.overview-config { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 24px; }
+.overview-config > label { flex: 1; min-width: 220px; }
+.overview-config select { margin-bottom: 0; }
+.overview-config > p { flex-basis: 100%; }
+.overview-summary { margin-bottom: 32px; }
+.overview-summary .section-heading { flex-wrap: wrap; gap: 16px; }
+.overview-summary .eyebrow { margin-bottom: 12px; }
+.overview-summary h2 { font-size: 28px; overflow-wrap: anywhere; }
+.overview-summary .count { white-space: normal; }
+.progress-label { margin: 16px 0; }
+.progress-label progress { width: 100%; height: 14px; accent-color: #246c55; display: block; margin-top: 10px; }
+.overview-filters { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+.overview-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.overview-task dl { margin: 20px 0; font-size: 12px; }
+.overview-task dl > div { display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px; padding: 9px 0; border-bottom: 1px solid #edf1ed; }
+.overview-task dt { color: #61756b; }
+.overview-task dd { margin: 0; overflow-wrap: anywhere; }
+.task-description { font-size: 13px; white-space: pre-wrap; line-height: 1.7; color: #53695e; overflow-wrap: anywhere; }
+.task-actions { display: flex; justify-content: flex-end; align-items: center; gap: 16px; }
+.task-actions a { font-size: 12px; color: #246c55; }
+.task-done { border-color: #9fc7ae; }
+.task-overdue { font-size: 12px; color: #97542e; margin-bottom: 16px; }
+.completion-checkbox { display: flex; align-items: center; gap: 8px; margin: 4px 0 14px; }
+.completion-checkbox input { width: auto; margin: 0; accent-color: #246c55; }
+@media (max-width: 760px) { .overview-cards { grid-template-columns: 1fr; } .overview-summary h2 { font-size: 24px; } }
+@media (max-width: 420px) { .overview-filters { grid-template-columns: 1fr; gap: 0; } .overview-task dl > div { grid-template-columns: 1fr; gap: 5px; } }

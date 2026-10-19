@@ -42,7 +42,7 @@ export default function SprintPlanner() {
     setDraft({
       name: sprint.name, goal: sprint.goal || '', start_date: sprint.start_date, end_date: sprint.end_date,
       members_count: String(sprint.members_count), daily_hours: String(sprint.daily_minutes / 60), working_days: sprint.working_days,
-      cards: sprint.cards.map(card => ({ id: card.id, title: card.title, start_date: card.start_date, end_date: card.end_date, hours: String(card.estimated_minutes / 60) })),
+      cards: sprint.cards.map(card => ({ id: card.id, title: card.title, start_date: card.start_date, end_date: card.end_date, hours: String(card.estimated_minutes / 60), is_completed: card.is_completed })),
     })
   }
   function updateCard(id: number, value: Partial<DraftCard>) {
@@ -57,7 +57,7 @@ export default function SprintPlanner() {
       const result = await request<{ data: Sprint }>(editingId ? `/sprints/${editingId}` : '/sprints', {
         name: draft.name, goal: draft.goal || null, start_date: draft.start_date, end_date: draft.end_date,
         members_count: Number(draft.members_count), daily_minutes: Math.round(Number(draft.daily_hours) * 60), working_days: draft.working_days,
-        cards: draft.cards.map(card => ({ id: card.id, start_date: card.start_date, end_date: card.end_date, estimated_minutes: Math.round(Number(card.hours) * 60) })),
+        cards: draft.cards.map(card => ({ id: card.id, start_date: card.start_date, end_date: card.end_date, estimated_minutes: Math.round(Number(card.hours) * 60), is_completed: card.is_completed })),
       }, editingId ? 'PUT' : 'POST')
       setSprints(current => [result.data, ...current.filter(sprint => sprint.id !== result.data.id)].sort((a, b) => b.start_date.localeCompare(a.start_date) || b.id - a.id))
       setSelectedId(result.data.id); setEditingId(null); setDraft(emptySprint)
@@ -77,7 +77,7 @@ export default function SprintPlanner() {
   const available = cards.filter(card => !draft.cards.some(item => item.id === card.id) && card.title.toLocaleLowerCase().includes(query.toLocaleLowerCase()))
 
   return <>
-    <div className="page-heading"><div><p className="eyebrow">DEL PENDIENTE AL PLAN</p><h1>Planea el siguiente sprint.</h1><p>Fechas claras, esfuerzo estimado y una carga de trabajo visible.</p></div><span className="count">{sprints.length} sprints</span></div>
+    <div className="page-heading"><div><p className="eyebrow">DEL PENDIENTE AL PLAN</p><h1>Planeación de sprints.</h1><p>Crea un nuevo plan o registra un sprint pasado con sus fechas y tarjetas resueltas.</p></div><span className="count">{sprints.length} sprints</span></div>
     {loadError && <div className="notice error" role="alert">{loadError} <button onClick={() => void load()}>Reintentar</button></div>}
     {success && <p className="notice success" role="status">{success}</p>}
     <div className="sprint-layout">
@@ -102,13 +102,14 @@ export default function SprintPlanner() {
           <div className="planned-cards">{draft.cards.map((card, index) => <div className="planned-card" key={card.id}>
             <div className="section-heading"><h4>AF-{card.id} · {card.title}</h4><button type="button" className="text-button" aria-label={`Quitar ${card.title}`} onClick={() => setDraft(current => ({ ...current, cards: current.cards.filter(item => item.id !== card.id) }))}>Quitar</button></div>
             {fieldError(`cards.${index}.id`)}
+            <label className="completion-checkbox"><input type="checkbox" checked={card.is_completed} onChange={e => updateCard(card.id, { is_completed: e.target.checked })} />Resuelta en este sprint</label>
             <div className="plan-fields"><label>Inicio *<input required type="date" min={draft.start_date || undefined} max={draft.end_date || undefined} value={card.start_date} onChange={e => updateCard(card.id, { start_date: e.target.value })} />{fieldError(`cards.${index}.start_date`)}</label>
               <label>Fin *<input required type="date" min={card.start_date || draft.start_date || undefined} max={draft.end_date || undefined} value={card.end_date} onChange={e => updateCard(card.id, { end_date: e.target.value })} />{fieldError(`cards.${index}.end_date`)}</label>
               <label>Esfuerzo (horas) *<input required type="number" min={0.25} max={16666.5} step="any" value={card.hours} onChange={e => updateCard(card.id, { hours: e.target.value })} placeholder="Ej. 6" />{fieldError(`cards.${index}.estimated_minutes`)}</label></div>
           </div>)}</div>
           <h3 className="subheading">Agregar desde el backlog</h3>
           <label><span className="sr-only">Buscar tarjetas para el sprint</span><input type="search" placeholder="Buscar tarjeta por título…" value={query} onChange={e => setQuery(e.target.value)} /></label>
-          <div className="backlog">{available.map(card => <div className="backlog-row" key={card.id}><div><strong>AF-{card.id} · {card.title}</strong><span>{card.assigned_to.name || 'Sin asignar'} · {card.status.name || 'Sin estado'}</span></div><button type="button" className="add-card" aria-label={`Agregar ${card.title}`} onClick={() => setDraft(current => ({ ...current, cards: [...current.cards, { id: card.id, title: card.title, start_date: current.start_date, end_date: current.end_date, hours: '' }] }))}>+ Agregar</button></div>)}{!loading && available.length === 0 && <p className="helper">No hay tarjetas disponibles para esta búsqueda. Puedes crear nuevas en Tarjetas.</p>}</div>
+          <div className="backlog">{available.map(card => <div className="backlog-row" key={card.id}><div><strong>AF-{card.id} · {card.title}</strong><span>{card.assigned_to.name || 'Sin asignar'} · {card.status.name || 'Sin estado'}</span></div><button type="button" className="add-card" aria-label={`Agregar ${card.title}`} onClick={() => setDraft(current => ({ ...current, cards: [...current.cards, { id: card.id, title: card.title, start_date: current.start_date, end_date: current.end_date, hours: '', is_completed: false }] }))}>+ Agregar</button></div>)}{!loading && available.length === 0 && <p className="helper">No hay tarjetas disponibles para esta búsqueda. Puedes crear nuevas en Tarjetas.</p>}</div>
           <button className="primary" type="submit">{saving ? 'Guardando…' : editingId ? 'Guardar cambios del sprint' : 'Crear sprint'}</button>
           <p className="hint">* Obligatorio · Las estimaciones se guardan por sprint.</p>
         </fieldset></form>

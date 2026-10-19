@@ -1,13 +1,15 @@
 export type PlannedCard = {
   id: number; title: string; assigned_to: string | null; status: string | null
   archived: boolean; start_date: string; end_date: string; estimated_minutes: number
+  is_completed: boolean; description: string; priority: number | null; jira_link: string | null; card_type: string | null
 }
 export type Sprint = {
   id: number; name: string; goal: string | null; start_date: string; end_date: string
   members_count: number; daily_minutes: number; working_days: number[]; working_dates: string[]
   capacity_minutes: number; estimated_minutes: number; remaining_minutes: number; cards: PlannedCard[]
+  completed_cards: number; completed_minutes: number
 }
-export type DraftCard = { id: number; title: string; start_date: string; end_date: string; hours: string }
+export type DraftCard = { id: number; title: string; start_date: string; end_date: string; hours: string; is_completed: boolean }
 export type SprintDraft = {
   name: string; goal: string; start_date: string; end_date: string
   members_count: string; daily_hours: string; working_days: number[]; cards: DraftCard[]

@@ -4,6 +4,7 @@ import { ApiError, request } from './api'
 import type { Card, Catalogs } from './api'
 import './App.css'
 import SprintPlanner from './SprintPlanner'
+import SprintOverview from './SprintOverview'
 
 const initial = { title: '', description: '', team_id: '', project_id: '', platform_id: '', status_id: '', card_type_id: '', assigned_to: '', module_id: '', priority: '', jira_link: '' }
 const selects = [
@@ -14,7 +15,7 @@ const selects = [
 ] as const
 
 function App() {
-  const [page, setPage] = useState<'cards' | 'sprints'>('cards')
+  const [page, setPage] = useState<'home' | 'cards' | 'sprints' | 'history'>('home')
   const [cards, setCards] = useState<Card[]>([])
   const [catalogs, setCatalogs] = useState<Catalogs | null>(null)
   const [form, setForm] = useState(initial)
@@ -66,10 +67,12 @@ function App() {
       <header className="topbar"><a className="brand" href="/"><span className="brand-icon">a</span>Abrhil<span>Flow</span></a><span className="workspace">ESPACIO DE TRABAJO</span></header>
       <main>
         <nav className="module-nav" aria-label="Módulos">
+          <button aria-current={page === 'home' ? 'page' : undefined} onClick={() => setPage('home')}>Inicio</button>
           <button aria-current={page === 'cards' ? 'page' : undefined} onClick={() => setPage('cards')}>Tarjetas</button>
           <button aria-current={page === 'sprints' ? 'page' : undefined} onClick={() => setPage('sprints')}>Planeación de sprints</button>
+          <button aria-current={page === 'history' ? 'page' : undefined} onClick={() => setPage('history')}>Historial</button>
         </nav>
-        {page === 'sprints' ? <SprintPlanner /> : <>
+        {page === 'home' || page === 'history' ? <SprintOverview key={page} history={page === 'history'} onPlan={() => setPage('sprints')} /> : page === 'sprints' ? <SprintPlanner /> : <>
         <div className="page-heading"><div><p className="eyebrow">TU EQUIPO, EN MOVIMIENTO</p><h1>Un lugar para cada tarea.</h1><p>Organiza las cards de tu equipo y convierte los pendientes en avances.</p></div><span className="count">{loading ? '…' : cards.length} cards</span></div>
         {loadError && <div className="notice error" role="alert">{loadError} <button onClick={() => void load()}>Reintentar</button></div>}
         {success && <div className="notice success" role="status">{success}</div>}

@@ -19,7 +19,7 @@ class Sprint extends Model
     {
         // Include archived cards to preserve the effort committed to an existing plan.
         return $this->belongsToMany(Card::class, 'sprint_cards')->withTrashed()
-            ->withPivot(['start_date', 'end_date', 'estimated_minutes'])->withTimestamps();
+            ->withPivot(['start_date', 'end_date', 'estimated_minutes', 'is_completed'])->withTimestamps();
     }
 
     public function workingDates(): array

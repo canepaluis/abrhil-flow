@@ -118,6 +118,10 @@ class SprintsTest extends TestCase
         $plan = $this->plan();
         $plan['cards'] = [['id' => $card->id, 'start_date' => $plan['start_date'], 'end_date' => $plan['end_date'], 'estimated_minutes' => 60]];
         $first = $this->postJson('/api/sprints', $plan)->assertCreated()->json('data.id');
+        $plan['start_date'] = '2026-11-02';
+        $plan['end_date'] = '2026-11-13';
+        $plan['cards'][0]['start_date'] = $plan['start_date'];
+        $plan['cards'][0]['end_date'] = $plan['end_date'];
         $plan['cards'][0]['estimated_minutes'] = 180;
         $this->postJson('/api/sprints', $plan)->assertCreated()->assertJsonPath('data.estimated_minutes', 180);
         $this->getJson("/api/sprints/$first")->assertOk()->assertJsonPath('data.estimated_minutes', 60);
@@ -129,5 +133,49 @@ class SprintsTest extends TestCase
     {
         $this->options('/api/sprints/1', [], ['Origin' => 'http://localhost:5173', 'Access-Control-Request-Method' => 'PUT'])
             ->assertSuccessful()->assertHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
+    }
+
+    public function test_create_rejects_any_shared_day_including_containment_and_boundaries(): void
+    {
+        $plan = $this->plan();
+        $plan['working_days'] = [1, 2, 3, 4, 5, 6, 7];
+        $this->postJson('/api/sprints', $plan)->assertCreated();
+        foreach ([
+            ['2026-10-19', '2026-10-30'], // Identical period.
+            ['2026-10-20', '2026-10-22'], // Entirely inside.
+            ['2026-10-01', '2026-11-10'], // Entirely outside, enclosing the existing sprint.
+            ['2026-10-15', '2026-10-22'], // Partial overlap on the left.
+            ['2026-10-28', '2026-11-02'], // Partial overlap on the right.
+            ['2026-10-10', '2026-10-19'], // Shares the starting day.
+            ['2026-10-30', '2026-11-05'], // Shares the ending day.
+        ] as [$start, $end]) {
+            $plan['start_date'] = $start;
+            $plan['end_date'] = $end;
+            $this->postJson('/api/sprints', $plan)->assertUnprocessable()
+                ->assertJsonValidationErrors(['start_date', 'end_date']);
+        }
+        $this->assertDatabaseCount('sprints', 1);
+    }
+
+    public function test_adjacent_periods_and_self_edit_are_allowed_but_conflicting_edit_is_atomic(): void
+    {
+        $plan = $this->plan();
+        $plan['working_days'] = [1, 2, 3, 4, 5, 6, 7];
+        $first = $this->postJson('/api/sprints', $plan)->assertCreated()->json('data.id');
+        $plan['name'] = 'Nombre actualizado';
+        $this->putJson("/api/sprints/$first", $plan)->assertOk();
+        $plan['start_date'] = '2026-10-31';
+        $plan['end_date'] = '2026-11-06';
+        $second = $this->postJson('/api/sprints', $plan)->assertCreated()->json('data.id');
+        $plan['start_date'] = '2026-10-05';
+        $plan['end_date'] = '2026-10-18';
+        $this->postJson('/api/sprints', $plan)->assertCreated();
+        $plan['name'] = 'No guardar';
+        $plan['start_date'] = '2026-10-30';
+        $plan['end_date'] = '2026-11-06';
+        $this->putJson("/api/sprints/$second", $plan)->assertUnprocessable()->assertJsonValidationErrors(['start_date', 'end_date']);
+        $this->getJson("/api/sprints/$second")->assertOk()
+            ->assertJsonPath('data.name', 'Nombre actualizado')->assertJsonPath('data.start_date', '2026-10-31');
+        $this->assertDatabaseCount('sprints', 3);
     }
 }
