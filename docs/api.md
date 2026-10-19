@@ -53,3 +53,9 @@ Días ISO: lunes=1, domingo=7. `cards` puede estar vacío y debe enviarse inclus
 La creación y edición de sprints aceptan `cards[].is_completed` opcional. Si se omite al actualizar una relación existente, conserva su valor; para relaciones nuevas toma false. Esto permite registrar sprints antiguos con resultados explícitos. Los recursos de sprints incluyen `completed_cards`, `completed_minutes` y, por tarjeta, `is_completed`, `description`, `priority`, `jira_link` y `card_type`, además de los campos anteriores. La marca de resolución es independiente del estado global de la tarjeta y se conserva aunque se archive. `SPRINT_TIMEZONE` configura la fecha usada por selección automática e historial.
 
 La creación y edición de sprints rechazan cualquier solapamiento de fechas con otro sprint (422 en start_date y end_date). Las fechas son inclusivas y se compara todo el periodo, incluidos días no laborables. Un sprint se excluye a sí mismo al editar. La comprobación se ejecuta bajo un bloqueo transaccional compartido por todas las escrituras de planes, antes de cambiar datos o tarjetas.
+
+## Equipo
+
+`GET /api/users` devuelve `{ "data": [{ "id": 1, "name": "…", "roles": [{ "id": 1, "slug": "developer", "name": "Desarrollador" }], "responsibilities": ["Desarrollo"] }] }`.
+
+No devuelve correo, contraseña, tokens ni claves internas. Los roles iniciales son project-lead, developer y tester. Cada persona puede tener varios roles, con responsabilidades propias. No son permisos de acceso y no habilitan autenticación. El directorio es de consulta; los perfiles iniciales se cargan con TeamMemberSeeder. `GET /api/card-catalogs` mantiene users como lista de id y name para asignaciones.

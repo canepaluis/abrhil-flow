@@ -59,3 +59,18 @@ El historial incluye los sprints con fin anterior a hoy. Para registrar un sprin
 La marca de resolución se guarda en `sprint_cards.is_completed`, por tarjeta y sprint. Se puede corregir desde Inicio, Historial o al editar el plan, sin cambiar el estado global de la tarjeta ni su marca en otros sprints. Las relaciones existentes comienzan con `false`: no se atribuyen resoluciones históricas por deducción. Descripción, responsable y estado global se consultan de la tarjeta actual; no constituyen una copia histórica. El esfuerzo resuelto mostrado es estimado, no tiempo real registrado. El porcentaje refleja cantidad de tarjetas resueltas, no horas consumidas. No se realizan conversiones automáticas entre estados como Liberado y esta marca explícita de resolución.
 
 Los sprints no pueden compartir días de calendario, incluidos fines de semana y días no laborables. Inicio y fin son inclusivos: si un sprint termina el 20, otro puede empezar el 21. La restricción aplica al crear o editar, a periodos pasados y futuros, y excluye al propio sprint al editarlo. Si hay conflicto la API devuelve 422 en start_date y end_date, indicando el nombre y periodo del sprint existente. Las escrituras de planes se serializan mediante la fila única de sprint_settings para evitar cruces entre solicitudes simultáneas. La restricción protege las escrituras de la API; las modificaciones SQL directas no pasan por esta validación.
+
+## Equipo: usuarios, roles y responsabilidades
+
+El módulo **Equipo** muestra los perfiles y permite buscar por nombre o responsabilidad y filtrar por rol. `GET /api/users` devuelve únicamente id, nombre, roles y responsabilidades. Los usuarios también están disponibles en el catálogo de responsables de tarjetas.
+
+El modelo admite varios roles por usuario mediante `roles` y `role_user`. Las responsabilidades se almacenan individualmente en users.responsibilities y no se deducen del rol:
+
+- Luis Alexis Canepa: Líder de proyecto y Desarrollador. Diseño, documentación, planeación, desarrollo, liberación y presentación de avances a dirección.
+- Fernando Kumul: Desarrollador. Diseño, documentación y desarrollo.
+- Ana Morales: Tester. Testing.
+- Cristopher Itza: Tester. Testing.
+
+Para instalar en otro entorno: `php artisan migrate` y `php artisan db:seed --class=TeamMemberSeeder`. El seeder usa una clave estable por persona, reutiliza un usuario con el mismo nombre si todavía no tiene clave y conserva correo, contraseña e ID existentes. Puede repetirse sin duplicar estos cuatro perfiles; vuelve a aplicar sus roles y responsabilidades iniciales. No elimina otros usuarios. Las instalaciones nuevas incluyen este seeder desde DatabaseSeeder.
+
+Los nuevos perfiles tienen email y password nulos, ya que todavía no se proporcionaron correos ni credenciales. Esta entrega es un directorio del equipo, no un sistema de autenticación o autorización. Los roles describen funciones de trabajo y todavía no conceden permisos. No hay edición de perfiles ni inicio de sesión en esta versión. La asignación de testers a Cloud/Exe y las aprobaciones por etapa se definirán posteriormente. La reversión de la migración elimina roles y responsabilidades pero conserva email/password como columnas opcionales para no invalidar los perfiles sin credenciales.
