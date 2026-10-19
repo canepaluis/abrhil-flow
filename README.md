@@ -40,7 +40,7 @@ Si PHP indica `could not find driver` para SQLite, puedes ejecutar los tests sin
 
 El módulo **Planeación de sprints** permite crear y editar nombre, objetivo, periodo, integrantes, horas diarias y días laborables. Por defecto usa lunes a viernes y 8 horas al día. Cada tarjeta seleccionada tiene fechas propias dentro del sprint y una estimación de esfuerzo en horas; la API almacena minutos enteros. Las fechas son inclusivas y el periodo máximo es de un año.
 
-Capacidad = días laborables × integrantes × minutos diarios. El esfuerzo total es la suma de las estimaciones de las tarjetas. La sobrecarga se advierte sin bloquear el guardado. No se descuentan festivos, vacaciones ni reuniones; ajusta horas diarias o días laborables para reflejar la disponibilidad real. No se calcula capacidad individual ni se impide planear una tarjeta en varios sprints: cada sprint conserva su propia estimación. Las barras representan el periodo planeado, no progreso ni un reparto automático de horas.
+Capacidad neta = suma de días laborables disponibles de los participantes × minutos diarios. Se descuentan los días libres y vacaciones registrados para cada persona. El esfuerzo total es la suma de las estimaciones de las tarjetas. La sobrecarga se advierte sin bloquear el guardado. No se descuentan festivos ni reuniones automáticamente; ajusta horas diarias o días laborables para reflejar la disponibilidad real. Se muestra disponibilidad individual y se permite planear una tarjeta en distintos sprints, cada uno con su propia estimación. Las barras representan el periodo planeado, no progreso ni reparto automático de horas.
 
 La migración `2026_10_18_000001_create_sprints_table.php` agrega `sprints` y `sprint_cards` sin modificar las tarjetas existentes. En otros entornos ejecuta `php artisan migrate`. No hace falta cambiar `VITE_API_URL`: ambos módulos comparten la conexión de `frontend/.env`.
 
@@ -62,7 +62,7 @@ Los sprints no pueden compartir días de calendario, incluidos fines de semana y
 
 ## Equipo: usuarios, roles y responsabilidades
 
-El módulo **Equipo** muestra los perfiles y permite buscar por nombre o responsabilidad y filtrar por rol. `GET /api/users` devuelve únicamente id, nombre, roles y responsabilidades. Los usuarios también están disponibles en el catálogo de responsables de tarjetas.
+El módulo **Equipo** muestra los perfiles y permite buscar por nombre o responsabilidad y filtrar por rol, además de registrar ausencias. `GET /api/users` devuelve id, nombre, roles, responsabilidades y ausencias. Los usuarios también están disponibles en el catálogo de responsables de tarjetas.
 
 El modelo admite varios roles por usuario mediante `roles` y `role_user`. Las responsabilidades se almacenan individualmente en users.responsibilities y no se deducen del rol:
 
@@ -74,3 +74,17 @@ El modelo admite varios roles por usuario mediante `roles` y `role_user`. Las re
 Para instalar en otro entorno: `php artisan migrate` y `php artisan db:seed --class=TeamMemberSeeder`. El seeder usa una clave estable por persona, reutiliza un usuario con el mismo nombre si todavía no tiene clave y conserva correo, contraseña e ID existentes. Puede repetirse sin duplicar estos cuatro perfiles; vuelve a aplicar sus roles y responsabilidades iniciales. No elimina otros usuarios. Las instalaciones nuevas incluyen este seeder desde DatabaseSeeder.
 
 Los nuevos perfiles tienen email y password nulos, ya que todavía no se proporcionaron correos ni credenciales. Esta entrega es un directorio del equipo, no un sistema de autenticación o autorización. Los roles describen funciones de trabajo y todavía no conceden permisos. No hay edición de perfiles ni inicio de sesión en esta versión. La asignación de testers a Cloud/Exe y las aprobaciones por etapa se definirán posteriormente. La reversión de la migración elimina roles y responsabilidades pero conserva email/password como columnas opcionales para no invalidar los perfiles sin credenciales.
+
+## Días libres, vacaciones y disponibilidad
+
+En **Equipo**, cada persona tiene un apartado **Días libres y vacaciones** para registrar, editar, cancelar y reactivar periodos. Son días completos e incluyen ambas fechas. Cancelar conserva el registro y permite reactivarlo. Dos periodos superpuestos de una misma persona descuentan cada día una sola vez.
+
+Los sprints ahora requieren seleccionar **participantes reales**; members_count se deriva de esa selección. La capacidad base cuenta sus días laborables y la jornada diaria del sprint. La capacidad neta descuenta únicamente las ausencias de esos participantes que coinciden con días laborables dentro del periodo. Personas ajenas al sprint y ausencias fuera del periodo no reducen la capacidad.
+
+Al cambiar una ausencia, el servidor recalcula todos los sprints relacionados en cada consulta: listado, detalle, inicio e historial. No hay copia de la capacidad que quede desactualizada. Si tienes una pantalla abierta, pulsa Actualizar o vuelve a entrar al módulo para consultar los cambios. La vista de planeación también calcula una previsión con las ausencias cargadas desde Equipo.
+
+El plan muestra, por participante, horas disponibles, esfuerzo asignado y días de ausencia. Por tarjeta, avisa si el responsable está ausente en sus fechas, no forma parte del sprint o no tiene horas suficientes. No cambia fechas, responsables ni estimaciones automáticamente y permite guardar planes con avisos para revisarlos. Los avisos no son una distribución automática del trabajo entre días; varias tarjetas pueden requerir ajustar su orden aun si cada una cabe por separado.
+
+**Sprints antiguos:** como solo guardaban un número de integrantes, no es posible identificar sus personas sin intervención. Muestran capacidad provisional y un aviso `requires_participants`. Abre Editar plan, selecciona sus participantes y guarda para activar el descuento de ausencias; la actualización requiere esta selección. No se asigna por defecto todo el equipo ni se adivinan participantes a partir de una sola tarjeta.
+
+Instalación en otros entornos: `php artisan migrate`. La migración agrega user_time_offs y sprint_user sin modificar fechas ni seleccionar usuarios para planes previos. No necesitas cambiar frontend/.env.

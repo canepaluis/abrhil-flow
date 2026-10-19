@@ -32,7 +32,7 @@ Ejemplo de cuerpo para crear o actualizar:
   "goal": "Entregar el portal",
   "start_date": "2026-10-19",
   "end_date": "2026-10-30",
-  "members_count": 2,
+  "participant_ids": [1, 2],
   "daily_minutes": 480,
   "working_days": [1, 2, 3, 4, 5],
   "cards": [
@@ -56,6 +56,20 @@ La creación y edición de sprints rechazan cualquier solapamiento de fechas con
 
 ## Equipo
 
-`GET /api/users` devuelve `{ "data": [{ "id": 1, "name": "…", "roles": [{ "id": 1, "slug": "developer", "name": "Desarrollador" }], "responsibilities": ["Desarrollo"] }] }`.
+`GET /api/users` devuelve `{ "data": [{ "id": 1, "name": "…", "roles": [{ "id": 1, "slug": "developer", "name": "Desarrollador" }], "responsibilities": ["Desarrollo"], "time_off": [] }] }`.
 
 No devuelve correo, contraseña, tokens ni claves internas. Los roles iniciales son project-lead, developer y tester. Cada persona puede tener varios roles, con responsabilidades propias. No son permisos de acceso y no habilitan autenticación. El directorio es de consulta; los perfiles iniciales se cargan con TeamMemberSeeder. `GET /api/card-catalogs` mantiene users como lista de id y name para asignaciones.
+
+## Ausencias y capacidad del sprint
+
+- `POST /api/users/{user}/time-off`: crear ausencia, devuelve 201.
+- `PUT /api/users/{user}/time-off/{timeOff}`: editar tipo y fechas, devuelve 200.
+- `POST /api/users/{user}/time-off/{timeOff}/status`: `{ "is_cancelled": true }` cancela; false reactiva.
+
+Cuerpo de creación/edición: `{ "type": "vacation", "start_date": "2026-10-19", "end_date": "2026-10-23" }`. type acepta vacation o day_off. Las fechas son inclusivas; fin debe ser igual o posterior al inicio. 422 para datos inválidos; 404 si la ausencia no pertenece al usuario de la ruta. GET /api/users incluye time_off, con id, tipo, fechas e is_cancelled. Se conservan los registros cancelados.
+
+POST/PUT /api/sprints requiere `participant_ids`: array no vacío de IDs de usuarios existentes, sin duplicados. members_count es opcional por compatibilidad, pero se ignora su valor y se deriva del número de participantes. Los clientes antiguos deben enviar participant_ids al crear/editar.
+
+Los recursos Sprint incluyen gross_capacity_minutes, absence_minutes, capacity_minutes (neta), requires_participants, participants y planning_warnings. Cada participante incluye id, name, absent_dates, available_minutes y estimated_minutes. Cada tarjeta incluye assigned_to_id, absence_dates, available_minutes y planning_warnings. La API de tarjetas agrega assigned_to.id, sin cambiar assigned_to.name.
+
+Se descuentan días laborables únicos por participante. Los avisos de disponibilidad no bloquean el guardado ni reprograman las tarjetas. Todas las consultas de sprints recalculan la capacidad con las ausencias activas actuales, también para sprints pasados. Los sprints anteriores sin participantes mantienen su capacidad provisional y requieren configuración explícita.
