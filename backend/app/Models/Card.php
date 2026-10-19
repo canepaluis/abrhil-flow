@@ -66,4 +66,10 @@ class Card extends Model
     {
         return $this->belongsTo(User::class, 'creator_id');
     }
+
+    public function sprints()
+    {
+        return $this->belongsToMany(Sprint::class, 'sprint_cards')
+            ->withPivot(['start_date', 'end_date', 'estimated_minutes'])->withTimestamps();
+    }
 }

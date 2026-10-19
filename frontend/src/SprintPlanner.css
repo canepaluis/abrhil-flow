@@ -1,0 +1,42 @@
+.module-nav { display: flex; gap: 8px; margin-bottom: 32px; border-bottom: 1px solid #dfe7e2; padding-bottom: 12px; }
+.module-nav button { background: transparent; padding: 10px 16px; color: #587066; border-radius: 8px; }
+.module-nav [aria-current="page"] { background: #246c55; color: white; }
+.sprint-layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.sprint-layout > * { min-width: 0; }
+.sprint-editor h2 { margin: 0; }
+.input-caption { font-size: 12px; font-weight: 600; }
+.weekdays { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 24px; }
+.weekdays label { display: flex; align-items: center; gap: 5px; background: #f1f5f1; padding: 8px; border-radius: 6px; }
+.weekdays input { width: auto; margin: 0; accent-color: #246c55; }
+.metrics { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+.metrics > div { flex: 1; background: #f2f6f2; border-radius: 8px; padding: 14px; }
+.metrics span { display: block; font-size: 11px; color: #61756b; margin-bottom: 8px; white-space: nowrap; }
+.metrics strong { font-size: 21px; white-space: nowrap; }
+.warning { background: #fff3da; color: #805715; }
+.subheading { font-size: 15px; margin: 24px 0 14px; }
+.helper { font-size: 12px; line-height: 1.8; color: #61756b; }
+.planned-card { padding: 16px; border: 1px solid #dce5df; border-radius: 10px; margin: 12px 0; }
+.planned-card h4 { font-size: 13px; margin: 0; overflow-wrap: anywhere; }
+.planned-card .section-heading { gap: 10px; }
+.plan-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
+.plan-fields label:last-child { grid-column: 1 / -1; }
+.backlog { max-height: 320px; overflow-y: auto; margin-bottom: 20px; }
+.backlog-row { display: flex; align-items: center; gap: 12px; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #e5ebe6; }
+.backlog-row strong { display: block; font-size: 12px; overflow-wrap: anywhere; }
+.backlog-row span { display: block; font-size: 11px; color: #6a7f72; margin-top: 6px; }
+.add-card { flex-shrink: 0; background: #e4eee7; color: #246c55; border-radius: 6px; padding: 8px; font-size: 11px; }
+.sprint-picker { display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; margin-bottom: 20px; }
+.sprint-picker button { text-align: left; padding: 16px; background: white; border: 1px solid #dfe7e2; border-radius: 10px; color: #304f41; }
+.sprint-picker button[aria-pressed="true"] { border: 2px solid #32805e; padding: 15px; background: #ecf4ec; }
+.sprint-picker strong { display: block; overflow-wrap: anywhere; }
+.sprint-picker span { display: block; font-size: 11px; margin-top: 8px; }
+.sprint-detail h2 { font-size: 20px; overflow-wrap: anywhere; }
+.sprint-detail .section-heading { gap: 12px; }
+.sprint-goal { margin-top: 16px; font-size: 13px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
+.schedule-row { border-top: 1px solid #e2e9e3; padding: 16px 0; }
+.schedule-row strong { display: block; font-size: 12px; overflow-wrap: anywhere; }
+.schedule-row span, .schedule-row small { display: block; font-size: 11px; color: #61756b; margin: 8px 0; }
+.timeline-track { background: #e9efea; height: 9px; border-radius: 5px; overflow: hidden; margin: 14px 0; }
+.timeline-bar { background: #42866a; height: 100%; border-radius: 5px; }
+@media (max-width: 1050px) { .sprint-layout { grid-template-columns: minmax(0, 1fr); } .sprint-saved { order: -1; } }
+@media (max-width: 420px) { .module-nav button { padding: 10px; font-size: 12px; } .plan-fields { grid-template-columns: 1fr; } .metrics > div { padding: 10px; } }
