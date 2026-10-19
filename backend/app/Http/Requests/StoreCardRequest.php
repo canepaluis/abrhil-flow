@@ -23,15 +23,15 @@ class StoreCardRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'required|string',
-            'description' => 'nullable|string',
+            'title' => 'required|string|max:255',
+            'description' => 'required|string|max:255',
             'team_id' => 'required|integer|exists:teams,id',
             'platform_id' => 'required|integer|exists:platforms,id',
             'project_id' => 'required|integer|exists:projects,id',
             'status_id' => 'required|integer|exists:statuses,id',
             'card_type_id' => 'required|integer|exists:card_types,id',
-            'jira_link' => 'nullable|string',
-            'priority' => 'nullable|integer',
+            'jira_link' => 'nullable|url:http,https|max:255',
+            'priority' => 'nullable|integer|min:0|max:2147483647',
             'assigned_to' => 'nullable|integer|exists:users,id',
             'module_id' => 'nullable|integer|exists:modules,id'
         ];
