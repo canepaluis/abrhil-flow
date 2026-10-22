@@ -3,6 +3,7 @@ export const stages = [
   { key: 'development', label: 'Desarrollo' }, { key: 'testing', label: 'Testing' },
   { key: 'approved', label: 'Testing aprobado' },
 ]
+export type WorkflowUpdate = { id: number; workflow: Workflow; card: import('./api').Card; sprints: import('./sprint').Sprint[] }
 export type Workflow = {
   state: string; label: string; stage: string; requires_corrections: boolean
   correction_origin: 'direction' | 'testing' | null; correction_note: string | null

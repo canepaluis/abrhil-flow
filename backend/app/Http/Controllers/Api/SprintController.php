@@ -38,6 +38,9 @@ class SprintController extends Controller
             // Serialize plan writes, including when no sprints exist yet.
             // This shares the singleton lock used by current-sprint configuration.
             DB::table('sprint_settings')->where('id', 1)->lockForUpdate()->first();
+            if ($sprint->exists && Sprint::whereKey($sprint->id)->value('production_release_date')) {
+                throw ValidationException::withMessages(['sprint' => 'El sprint finalizado conserva su planeación y sus datos de cierre.']);
+            }
             $conflict = Sprint::whereDate('start_date', '<=', $data['end_date'])
                 ->whereDate('end_date', '>=', $data['start_date'])
                 ->when($sprint->exists, fn ($query) => $query->where('id', '!=', $sprint->id))

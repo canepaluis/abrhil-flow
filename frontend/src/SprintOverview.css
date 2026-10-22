@@ -27,3 +27,10 @@
 @media (max-width: 760px) { .overview-cards { grid-template-columns: 1fr; } .overview-summary h2 { font-size: 24px; } }
 @media (max-width: 760px) { .overview-filters { grid-template-columns: 1fr; gap: 0; } }
 @media (max-width: 420px) { .overview-filters { grid-template-columns: 1fr; gap: 0; } .overview-task dl > div { grid-template-columns: 1fr; gap: 5px; } }
+
+.sprint-closure { margin-bottom: 24px; border-left: 5px solid #c89735; }
+.sprint-closure.closure-finalized { border-left-color: #35805a; }
+.closure-dates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 20px 0; }
+.closure-dates dt { font-size: 12px; color: #66786c; margin-bottom: 8px; }
+.closure-dates dd { margin: 0; font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+@media (max-width: 700px) { .closure-dates { grid-template-columns: 1fr; } }

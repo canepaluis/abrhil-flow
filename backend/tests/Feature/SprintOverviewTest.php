@@ -48,6 +48,48 @@ class SprintOverviewTest extends TestCase
         ]);
     }
 
+    public function test_closure_requires_all_cards_approved_and_supports_progressive_early_release(): void
+    {
+        $sprint = $this->sprint();
+        $url = "/api/sprints/$sprint->id/closure";
+        $this->putJson($url, ['review_date' => '2026-10-19'])->assertUnprocessable();
+        $card = $this->card();
+        $this->attach($sprint, $card);
+        $this->putJson($url, ['review_date' => '2026-10-19'])->assertUnprocessable();
+        $card->update(['workflow_state' => 'testing_approved']);
+        $this->putJson($url, ['review_date' => '2026-10-19'])->assertOk()
+            ->assertJsonPath('data.closure.status', 'pending_release')->assertJsonPath('data.closure.review_date', '2026-10-19');
+        $this->putJson($url, ['production_release_date' => '2026-10-21'])->assertUnprocessable()->assertJsonValidationErrors('production_release_date');
+        $this->putJson($url, ['dev_review_date' => '2026-10-20', 'dev_review_jira_url' => 'https://example.atlassian.net/browse/AHD-100'])
+            ->assertOk()->assertJsonPath('data.closure.review_date', '2026-10-19');
+        $this->getJson('/api/sprints/current')->assertOk()->assertJsonPath('data.closure.status', 'pending_release');
+        $this->putJson($url, ['production_release_date' => '2026-10-21'])->assertOk()
+            ->assertJsonPath('data.closure.status', 'finalized')->assertJsonPath('data.completed_cards', 1);
+        $this->getJson('/api/sprints/history')->assertOk()->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.closure.dev_review_jira_url', 'https://example.atlassian.net/browse/AHD-100')
+            ->assertJsonPath('data.0.closure.production_release_date', '2026-10-21');
+        $this->putJson($url, ['production_release_date' => null])->assertUnprocessable();
+        $this->postJson("/api/sprints/$sprint->id/cards/$card->id/completion", ['is_completed' => false])->assertUnprocessable();
+        $card->update(['workflow_state' => 'cancelled']);
+        $this->getJson("/api/sprints/$sprint->id")->assertOk()->assertJsonPath('data.completed_cards', 1);
+    }
+
+    public function test_closure_validates_dates_jira_and_optional_link_and_stays_pending_after_end(): void
+    {
+        $sprint = $this->sprint('2026-10-13', '2026-10-17');
+        $card = $this->card();
+        $card->update(['workflow_state' => 'testing_approved']);
+        $this->attach($sprint, $card);
+        $url = "/api/sprints/$sprint->id/closure";
+        $this->putJson($url, ['review_date' => '2026-10-22'])->assertUnprocessable();
+        $this->putJson($url, ['review_date' => '2026-10-12'])->assertUnprocessable();
+        $this->putJson($url, ['review_date' => '2026-10-20', 'dev_review_date' => '2026-10-19'])->assertUnprocessable();
+        $this->putJson($url, ['dev_review_jira_url' => 'javascript:alert(1)'])->assertUnprocessable();
+        $this->getJson('/api/sprints/current')->assertOk()->assertJsonPath('data.id', $sprint->id)->assertJsonPath('data.closure.status', 'pending_release')->assertJsonPath('data.completed_cards', 1);
+        $this->putJson($url, ['review_date' => '2026-10-19', 'dev_review_date' => '2026-10-20', 'production_release_date' => '2026-10-21'])
+            ->assertOk()->assertJsonPath('data.closure.status', 'finalized')->assertJsonPath('data.closure.dev_review_jira_url', null);
+    }
+
     public function test_automatic_uses_last_created_only_when_today_is_inclusive_in_its_period(): void
     {
         $this->getJson('/api/sprints/current')->assertOk()->assertJsonPath('data', null)->assertJsonPath('mode', 'automatic');

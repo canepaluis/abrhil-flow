@@ -85,8 +85,8 @@ function App() {
             <div className="section-heading"><h2 id="cards-heading">Cards del equipo</h2><button className="text-button" disabled={loading || saving} onClick={() => void load()}>Actualizar</button></div>
             <label className="search"><span className="sr-only">Buscar por título</span><input type="search" placeholder="Buscar una card por título…" value={query} onChange={e => setQuery(e.target.value)} /></label>
             {loading ? <p className="empty" role="status">Cargando cards…</p> : loadError ? <p className="empty">La lista no pudo actualizarse.</p> : visibleCards.length === 0 ? <div className="empty"><span className="empty-icon" aria-hidden="true">▤</span><h3>{query ? 'Sin coincidencias' : 'Todo empieza con una card'}</h3><p>{query ? 'Prueba con otro título.' : 'Agrega tu primera tarea con el formulario.'}</p></div> : <div className="cards">{visibleCards.map(card => <article className="card" key={card.id}>
-              <div className="card-top"><span className="card-id">{card.workflow.reference}</span><span className="badge">{card.workflow.label || 'Sin estado'}</span></div>
-              <h3>{card.title}</h3><CardWorkflow id={card.id} workflow={card.workflow} onChanged={() => void load()} /><span className="type">{card.card_type.name || 'Sin tipo'}</span>
+              <div className="card-top"><span className="card-id">{card.workflow.reference}</span></div>
+              <h3>{card.title}</h3><CardWorkflow id={card.id} workflow={card.workflow} onChanged={update => setCards(current => current.map(item => item.id === update.id ? update.card : item))} /><span className="type">{card.card_type.name || 'Sin tipo'}</span>
               <div className="card-footer"><span className="assignee"><span className="avatar">{card.assigned_to.name?.charAt(0).toUpperCase() || '—'}</span>{card.assigned_to.name || 'Sin asignar'}</span><span>Prioridad {card.priority ?? '—'}</span></div>
             </article>)}</div>}
           </section>

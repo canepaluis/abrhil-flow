@@ -99,6 +99,31 @@ class CardWorkflowTest extends TestCase
         $this->putJson("/api/cards/$card->id/workflow", ['state' => 'documentation_pending'])->assertUnprocessable();
     }
 
+    public function test_partial_updates_return_fresh_owners_and_affected_sprint_totals(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-10-22 12:00:00', 'America/Cancun'));
+        $card = $this->card();
+        $plan = $this->postJson('/api/sprints', [
+            'name' => 'Sprint', 'start_date' => '2026-10-19', 'end_date' => '2026-10-30',
+            'participant_ids' => [$card->developer_id], 'daily_minutes' => 480, 'working_days' => [1, 2, 3, 4, 5],
+            'cards' => [['id' => $card->id, 'start_date' => '2026-10-19', 'end_date' => '2026-10-30', 'estimated_minutes' => 120]],
+        ])->assertCreated();
+        $replacement = User::factory()->create();
+        $this->putJson("/api/cards/$card->id/workflow", ['documenter_id' => $replacement->id])
+            ->assertOk()->assertJsonPath('data.workflow.active_owner', $replacement->name)
+            ->assertJsonPath('data.card.workflow.active_owner', $replacement->name)
+            ->assertJsonPath('data.sprints.0.cards.0.workflow.active_owner', $replacement->name);
+        $this->assertDatabaseHas('cards', ['id' => $card->id, 'developer_id' => $card->developer_id]);
+        $this->postJson('/api/sprints/'.$plan->json('data.id')."/cards/$card->id/completion", ['is_completed' => true])->assertUnprocessable();
+        $this->advance($card, ['documentation_in_progress', 'approval_pending', 'approval_in_review', 'development_ready', 'development_in_progress', 'testing_pending', 'testing_in_progress']);
+        $this->putJson("/api/cards/$card->id/workflow", ['state' => 'testing_approved'])
+            ->assertOk()->assertJsonPath('data.sprints.0.completed_cards', 1)
+            ->assertJsonPath('data.sprints.0.completed_minutes', 120)->assertJsonPath('data.sprints.0.cards.0.is_completed', true);
+        $this->travelTo(CarbonImmutable::parse('2026-11-02 12:00:00', 'America/Cancun'));
+        $this->putJson("/api/cards/$card->id/workflow", ['state' => 'cancelled', 'note' => 'Se retira después del cierre.'])
+            ->assertOk()->assertJsonPath('data.sprints.0.completed_cards', 1);
+    }
+
     public function test_demo_is_idempotent_identified_and_does_not_overwrite_real_cards(): void
     {
         $this->travelTo(CarbonImmutable::parse('2026-10-22 12:00:00', 'America/Cancun'));

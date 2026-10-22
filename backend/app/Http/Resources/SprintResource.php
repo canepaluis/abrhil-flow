@@ -14,11 +14,30 @@ class SprintResource extends JsonResource
         $availability = app(SprintAvailability::class)->calculate($this->resource);
         $capacity = $availability['capacity_minutes'];
         $estimated = (int) $this->cards->sum('pivot.estimated_minutes');
+        $completed = $this->cards->filter(function ($card) {
+            if ($this->production_release_date) return (bool) $card->pivot->is_completed;
+            if ($this->review_date || $this->dev_review_date || $this->resource->readyForClosure() || $this->end_date->toDateString() >= now(config('sprints.timezone'))->toDateString()) {
+                return $card->workflow_state === 'testing_approved';
+            }
+            // Preserve imported history; recorded workflow events take precedence.
+            if ($card->workflowEvents->isEmpty()) return (bool) $card->pivot->is_completed;
+            $cutoff = \Carbon\CarbonImmutable::parse($this->end_date->toDateString(), config('sprints.timezone'))->endOfDay();
+            $event = $card->workflowEvents->filter(fn ($event) => $event->created_at->lte($cutoff))->first();
+            return $event ? $event->to_state === 'testing_approved' : (bool) $card->pivot->is_completed;
+        });
 
         return [
             'id' => $this->id,
             'name' => $this->name,
             'goal' => $this->goal,
+            'closure' => [
+                'ready' => $this->resource->readyForClosure(),
+                'status' => $this->production_release_date ? 'finalized' : ($this->resource->readyForClosure() || $this->review_date || $this->dev_review_date ? 'pending_release' : 'in_progress'),
+                'review_date' => $this->review_date?->toDateString(),
+                'dev_review_date' => $this->dev_review_date?->toDateString(),
+                'dev_review_jira_url' => $this->dev_review_jira_url,
+                'production_release_date' => $this->production_release_date?->toDateString(),
+            ],
             'start_date' => $this->start_date->toDateString(),
             'end_date' => $this->end_date->toDateString(),
             'members_count' => $this->members_count,
@@ -37,8 +56,8 @@ class SprintResource extends JsonResource
             'planning_warnings' => $availability['planning_warnings'],
             'estimated_minutes' => $estimated,
             'remaining_minutes' => $capacity - $availability['development_estimated_minutes'],
-            'completed_cards' => $this->cards->filter(fn ($card) => (bool) $card->pivot->is_completed)->count(),
-            'completed_minutes' => (int) $this->cards->filter(fn ($card) => (bool) $card->pivot->is_completed)->sum('pivot.estimated_minutes'),
+            'completed_cards' => $completed->count(),
+            'completed_minutes' => (int) $completed->sum('pivot.estimated_minutes'),
             'cards' => $this->cards->map(fn ($card) => [
                 'id' => $card->id,
                 'workflow' => app(\App\Services\CardWorkflow::class)->describe($card),
@@ -48,7 +67,7 @@ class SprintResource extends JsonResource
                 'priority' => $card->priority,
                 'jira_link' => $card->jira_link,
                 'card_type' => $card->cardType?->name,
-                'is_completed' => (bool) $card->pivot->is_completed,
+                'is_completed' => $completed->contains('id', $card->id),
                 'assigned_to' => $card->workflowOwner()?->name,
                 'assigned_to_id' => $card->workflowOwner()?->id,
                 'status' => $card->status?->name,

@@ -20,7 +20,8 @@ class SprintOverviewController extends Controller
         $today = $this->today();
         $manualId = DB::table('sprint_settings')->where('id', 1)->value('current_sprint_id');
         $sprint = $manualId ? Sprint::find($manualId) : Sprint::orderByDesc('id')->first();
-        if (!$manualId && $sprint && ($sprint->start_date->toDateString() > $today || $sprint->end_date->toDateString() < $today)) {
+        $pendingClosure = $sprint && !$sprint->production_release_date && ($sprint->review_date || $sprint->dev_review_date || $sprint->readyForClosure());
+        if (!$manualId && $sprint && ($sprint->start_date->toDateString() > $today || ($sprint->end_date->toDateString() < $today && !$pendingClosure))) {
             $sprint = null;
         }
         return response()->json([
@@ -44,13 +45,16 @@ class SprintOverviewController extends Controller
     public function history()
     {
         return SprintResource::collection(Sprint::with(['cards.assignedTo.timeOffs', 'cards.status', 'cards.cardType', 'participants.timeOffs', 'participants.roles', 'cards.assignedTo.roles'])
-            ->where('end_date', '<', $this->today())->orderByDesc('end_date')->orderByDesc('id')->get());
+            ->where(fn ($query) => $query->where('end_date', '<', $this->today())->orWhereNotNull('production_release_date'))->orderByDesc('end_date')->orderByDesc('id')->get());
     }
 
     public function completion(Request $request, Sprint $sprint, int $card)
     {
         $data = $request->validate(['is_completed' => 'required|boolean']);
         abort_unless($sprint->cards()->where('cards.id', $card)->exists(), 404);
+        if ($sprint->production_release_date || $sprint->end_date->toDateString() >= $this->today() || $sprint->cards()->findOrFail($card)->workflowEvents->isNotEmpty()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['is_completed' => 'La resolución se determina por la aprobación de testing. Actualiza la etapa de la tarjeta.']);
+        }
         $sprint->cards()->updateExistingPivot($card, ['is_completed' => $data['is_completed']]);
         return new SprintResource($sprint->load(['cards.assignedTo.timeOffs', 'cards.status', 'cards.cardType', 'participants.timeOffs', 'participants.roles', 'cards.assignedTo.roles']));
     }

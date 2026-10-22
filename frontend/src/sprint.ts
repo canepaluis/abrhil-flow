@@ -7,6 +7,7 @@ export type PlannedCard = {
   capacity_scope: 'development' | 'other' | 'unclassified'
 }
 export type Sprint = {
+  closure: { ready: boolean; status: 'in_progress' | 'pending_release' | 'finalized'; review_date: string | null; dev_review_date: string | null; dev_review_jira_url: string | null; production_release_date: string | null }
   id: number; name: string; goal: string | null; start_date: string; end_date: string
   members_count: number; daily_minutes: number; working_days: number[]; working_dates: string[]
   capacity_minutes: number; estimated_minutes: number; remaining_minutes: number; cards: PlannedCard[]

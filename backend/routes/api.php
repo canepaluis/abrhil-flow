@@ -15,6 +15,7 @@ Route::post('users/{user}/time-off/{timeOff}/status', [\App\Http\Controllers\Api
 Route::get('sprints/current', [\App\Http\Controllers\Api\SprintOverviewController::class, 'current']);
 Route::post('sprints/current', [\App\Http\Controllers\Api\SprintOverviewController::class, 'configure']);
 Route::get('sprints/history', [\App\Http\Controllers\Api\SprintOverviewController::class, 'history']);
+Route::put('sprints/{sprint}/closure', [\App\Http\Controllers\Api\SprintClosureController::class, 'update']);
 Route::post('sprints/{sprint}/cards/{card}/completion', [\App\Http\Controllers\Api\SprintOverviewController::class, 'completion']);
 Route::apiResource('sprints', \App\Http\Controllers\Api\SprintController::class)->only(['index', 'show', 'store', 'update']);
 Route::apiResource('sprints', \App\Http\Controllers\Api\SprintController::class)->only(['index', 'show', 'store', 'update']);

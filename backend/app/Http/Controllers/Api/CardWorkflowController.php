@@ -30,12 +30,19 @@ class CardWorkflowController extends Controller
             }
         }
         $card = DB::transaction(function () use ($card, $data, $workflow) {
+            DB::table('sprint_settings')->where('id', 1)->lockForUpdate()->first();
             $locked = Card::whereKey($card->id)->lockForUpdate()->firstOrFail();
             $locked->fill(array_intersect_key($data, array_flip(['documenter_id', 'developer_id', 'tester_id', 'approval_owner_id', 'requested_at'])));
             if (isset($data['state'])) $workflow->move($locked, $data['state'], $data['note'] ?? null);
             $locked->save();
             return $locked;
         });
-        return response()->json(['data' => ['id' => $card->id, 'workflow' => $workflow->describe($card)]]);
+        $card->refresh();
+        return response()->json(['data' => [
+            'id' => $card->id,
+            'workflow' => $workflow->describe($card),
+            'card' => (new \App\Http\Resources\CardSummaryResource($card))->resolve(),
+            'sprints' => \App\Http\Resources\SprintResource::collection($card->sprints()->get())->resolve(),
+        ]]);
     }
 }

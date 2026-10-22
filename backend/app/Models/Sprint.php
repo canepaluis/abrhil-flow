@@ -12,7 +12,12 @@ class Sprint extends Model
 
     protected function casts(): array
     {
-        return ['start_date' => 'date', 'end_date' => 'date', 'working_days' => 'array', 'members_count' => 'integer', 'daily_minutes' => 'integer'];
+        return ['start_date' => 'date', 'end_date' => 'date', 'review_date' => 'date', 'dev_review_date' => 'date', 'production_release_date' => 'date', 'working_days' => 'array', 'members_count' => 'integer', 'daily_minutes' => 'integer'];
+    }
+
+    public function readyForClosure(): bool
+    {
+        return $this->cards->isNotEmpty() && $this->cards->every(fn ($card) => $card->workflow_state === 'testing_approved');
     }
 
     public function cards(): BelongsToMany
