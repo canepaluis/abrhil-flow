@@ -8,7 +8,8 @@ class SprintAvailability
 {
     public function calculate(Sprint $sprint): array
     {
-        $sprint->loadMissing(['participants.timeOffs', 'participants.roles', 'cards.assignedTo.timeOffs', 'cards.assignedTo.roles']);
+        $sprint->loadMissing(['participants.timeOffs', 'participants.roles', 'cards.assignedTo.timeOffs', 'cards.assignedTo.roles',
+            'cards.documenter.timeOffs', 'cards.developer.timeOffs', 'cards.tester.timeOffs', 'cards.approvalOwner.timeOffs']);
         $dates = $sprint->workingDates();
         $members = $sprint->participants;
         $warnings = [];
@@ -23,7 +24,7 @@ class SprintAvailability
             if ($isDeveloper) {
                 $absentByUser[$member->id] = $absent;
             }
-            $estimated = (int) $sprint->cards->where('assigned_to', $member->id)->sum('pivot.estimated_minutes');
+            $estimated = (int) $sprint->cards->filter(fn ($card) => ($card->developer_id ?? $card->assigned_to) == $member->id)->sum('pivot.estimated_minutes');
             $available = (count($dates) - count($absent)) * $sprint->daily_minutes;
             $memberDetails[] = [
                 'id' => $member->id, 'name' => $member->name, 'absent_dates' => $absent,
@@ -39,8 +40,10 @@ class SprintAvailability
         $otherEstimate = 0;
         $unclassifiedEstimate = 0;
         foreach ($sprint->cards as $card) {
-            $scope = !$card->assignedTo || $card->assignedTo->roles->isEmpty()
-                ? 'unclassified' : ($card->assignedTo->roles->contains('slug', 'developer') ? 'development' : 'other');
+            $effortOwner = $card->developer ?? $card->assignedTo;
+            $activeOwner = $card->workflowOwner();
+            $scope = !$effortOwner || $effortOwner->roles->isEmpty()
+                ? 'unclassified' : ($effortOwner->roles->contains('slug', 'developer') ? 'development' : 'other');
             match ($scope) {
                 'development' => $developmentEstimate += (int) $card->pivot->estimated_minutes,
                 'other' => $otherEstimate += (int) $card->pivot->estimated_minutes,
@@ -50,16 +53,16 @@ class SprintAvailability
             $absent = [];
             $available = null;
             $cardWarnings = [];
-            if ($card->assignedTo) {
-                $absent = $this->absentDates($card->assignedTo->timeOffs, $cardDates);
+            if ($activeOwner) {
+                $absent = $this->absentDates($activeOwner->timeOffs, $cardDates);
                 $available = (count($cardDates) - count($absent)) * $sprint->daily_minutes;
-                if (!$members->contains('id', $card->assigned_to)) {
+                if (!$members->contains('id', $activeOwner->id)) {
                     $cardWarnings[] = 'El responsable no está incluido entre los participantes del sprint.';
                 }
                 if ($absent) {
                     $cardWarnings[] = 'La planeación coincide con '.count($absent).' día(s) de ausencia del responsable.';
                 }
-                if ($card->pivot->estimated_minutes > $available) {
+                if ($activeOwner->id === $effortOwner?->id && $card->pivot->estimated_minutes > $available) {
                     $cardWarnings[] = 'El esfuerzo supera las horas disponibles del responsable en estas fechas.';
                 }
             } else {

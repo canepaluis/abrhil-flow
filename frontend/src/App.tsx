@@ -6,12 +6,13 @@ import './App.css'
 import SprintPlanner from './SprintPlanner'
 import SprintOverview from './SprintOverview'
 import TeamMembers from './TeamMembers'
+import CardWorkflow from './CardWorkflow'
 
 const initial = { title: '', description: '', team_id: '', project_id: '', platform_id: '', status_id: '', card_type_id: '', assigned_to: '', module_id: '', priority: '', jira_link: '' }
 const selects = [
   ['team_id', 'Equipo', 'teams', true], ['project_id', 'Proyecto', 'projects', true],
   ['platform_id', 'Plataforma', 'platforms', true], ['card_type_id', 'Tipo de card', 'card_types', true],
-  ['status_id', 'Estado', 'statuses', true], ['assigned_to', 'Responsable', 'users', false],
+  ['assigned_to', 'Responsable', 'users', false],
   ['module_id', 'Módulo', 'modules', false],
 ] as const
 
@@ -48,6 +49,7 @@ function App() {
       body[key] = form[key] === '' ? null : Number(form[key])
     }
     body.jira_link = form.jira_link || null
+    body.status_id = catalogs?.statuses.find(status => status.name.toLocaleLowerCase() === 'documentación')?.id
     try {
       const result = await request<{ data: Card }>('/cards', body)
       setCards(current => [result.data, ...current]); setForm(initial)
@@ -60,7 +62,7 @@ function App() {
   function fieldError(name: string) {
     return errors[name] ? <small className="field-error" id={`${name}-error`}>{errors[name].join(' ')}</small> : null
   }
-  const missingCatalogs = catalogs && selects.some(([, , catalog, required]) => required && catalogs[catalog].length === 0)
+  const missingCatalogs = catalogs && (selects.some(([, , catalog, required]) => required && catalogs[catalog].length === 0) || !catalogs.statuses.some(status => status.name.toLocaleLowerCase() === 'documentación'))
   const visibleCards = cards.filter(card => card.title.toLocaleLowerCase().includes(query.toLocaleLowerCase()))
 
   return (
@@ -83,12 +85,12 @@ function App() {
             <div className="section-heading"><h2 id="cards-heading">Cards del equipo</h2><button className="text-button" disabled={loading || saving} onClick={() => void load()}>Actualizar</button></div>
             <label className="search"><span className="sr-only">Buscar por título</span><input type="search" placeholder="Buscar una card por título…" value={query} onChange={e => setQuery(e.target.value)} /></label>
             {loading ? <p className="empty" role="status">Cargando cards…</p> : loadError ? <p className="empty">La lista no pudo actualizarse.</p> : visibleCards.length === 0 ? <div className="empty"><span className="empty-icon" aria-hidden="true">▤</span><h3>{query ? 'Sin coincidencias' : 'Todo empieza con una card'}</h3><p>{query ? 'Prueba con otro título.' : 'Agrega tu primera tarea con el formulario.'}</p></div> : <div className="cards">{visibleCards.map(card => <article className="card" key={card.id}>
-              <div className="card-top"><span className="card-id">AF-{card.id}</span><span className="badge">{card.status.name || 'Sin estado'}</span></div>
-              <h3>{card.title}</h3><span className="type">{card.card_type.name || 'Sin tipo'}</span>
+              <div className="card-top"><span className="card-id">{card.workflow.reference}</span><span className="badge">{card.workflow.label || 'Sin estado'}</span></div>
+              <h3>{card.title}</h3><CardWorkflow id={card.id} workflow={card.workflow} onChanged={() => void load()} /><span className="type">{card.card_type.name || 'Sin tipo'}</span>
               <div className="card-footer"><span className="assignee"><span className="avatar">{card.assigned_to.name?.charAt(0).toUpperCase() || '—'}</span>{card.assigned_to.name || 'Sin asignar'}</span><span>Prioridad {card.priority ?? '—'}</span></div>
             </article>)}</div>}
           </section>
-          <section className="form-panel" aria-labelledby="new-heading"><p className="eyebrow">DA EL SIGUIENTE PASO</p><h2 id="new-heading">Nueva card</h2><p className="form-intro">Define el trabajo y dale un lugar en tu equipo.</p>
+          <section className="form-panel" aria-labelledby="new-heading"><p className="eyebrow">DA EL SIGUIENTE PASO</p><h2 id="new-heading">Nueva card</h2><p className="form-intro">Las tarjetas nuevas comienzan en Por documentar. Después podrás asignar los responsables por etapa.</p>
             {missingCatalogs && <p className="notice error" role="alert">Faltan catálogos obligatorios. Carga equipos, proyectos, plataformas, tipos y estados en el backend y pulsa Actualizar.</p>}
             {saveError && <p className="notice error" role="alert">{saveError}</p>}
             <form onSubmit={save}><fieldset disabled={saving || loading || !catalogs || !!loadError || !!missingCatalogs}>

@@ -48,7 +48,7 @@ export default function SprintPlanner() {
     setDraft({
       name: sprint.name, goal: sprint.goal || '', start_date: sprint.start_date, end_date: sprint.end_date,
       participant_ids: sprint.participants.map(member => member.id), daily_hours: String(sprint.daily_minutes / 60), working_days: sprint.working_days,
-      cards: sprint.cards.map(card => ({ id: card.id, title: card.title, start_date: card.start_date, end_date: card.end_date, hours: String(card.estimated_minutes / 60), is_completed: card.is_completed, assigned_to_id: card.assigned_to_id })),
+      cards: sprint.cards.map(card => ({ id: card.id, title: card.title, start_date: card.start_date, end_date: card.end_date, hours: String(card.estimated_minutes / 60), is_completed: card.is_completed, assigned_to_id: card.assigned_to_id, development_owner_id: card.development_owner_id })),
     })
   }
   function updateCard(id: number, value: Partial<DraftCard>) {
@@ -82,9 +82,9 @@ export default function SprintPlanner() {
   const developers = members.filter(isDeveloper)
   const lostMinutes = developers.reduce((sum, user) => sum + absentDates(user, dates).length * dailyMinutes, 0)
   const capacity = dates.length * developers.length * dailyMinutes - lostMinutes
-  const developmentCards = draft.cards.filter(card => users.some(user => user.id === card.assigned_to_id && isDeveloper(user)))
+  const developmentCards = draft.cards.filter(card => users.some(user => user.id === card.development_owner_id && isDeveloper(user)))
   const effort = developmentCards.reduce((sum, card) => sum + Math.round(Number(card.hours || 0) * 60), 0)
-  const unclassifiedEffort = draft.cards.filter(card => !users.some(user => user.id === card.assigned_to_id && user.roles.length > 0)).reduce((sum, card) => sum + Math.round(Number(card.hours || 0) * 60), 0)
+  const unclassifiedEffort = draft.cards.filter(card => !users.some(user => user.id === card.development_owner_id && user.roles.length > 0)).reduce((sum, card) => sum + Math.round(Number(card.hours || 0) * 60), 0)
   const totalEffort = draft.cards.reduce((sum, card) => sum + Math.round(Number(card.hours || 0) * 60), 0)
   const selected = sprints.find(sprint => sprint.id === selectedId) || sprints[0]
   const available = cards.filter(card => !draft.cards.some(item => item.id === card.id) && card.title.toLocaleLowerCase().includes(query.toLocaleLowerCase()))
@@ -117,7 +117,7 @@ export default function SprintPlanner() {
           {members.map(user => {
             const absences = absentDates(user, dates)
             const available = (dates.length - absences.length) * dailyMinutes
-            const assigned = draft.cards.filter(card => card.assigned_to_id === user.id).reduce((sum, card) => sum + Math.round(Number(card.hours || 0) * 60), 0)
+            const assigned = draft.cards.filter(card => card.development_owner_id === user.id).reduce((sum, card) => sum + Math.round(Number(card.hours || 0) * 60), 0)
             return <p className="helper" key={user.id}>{user.name} ({isDeveloper(user) ? 'Desarrollo' : 'Fuera de capacidad de desarrollo'}): {hours(available)} disponibles · {hours(assigned)} asignadas · {absences.length} día(s) ausente{assigned > available ? ' · Sobrecarga individual' : ''}</p>
           })}
           {effort > capacity && <p className="notice warning" role="status">Sobrecarga de desarrollo: {hours(effort - capacity)}. Puedes guardar el plan y ajustar su alcance después.</p>}
@@ -132,7 +132,7 @@ export default function SprintPlanner() {
               const taskDates = workingDates(card.start_date, card.end_date, draft.working_days)
               const absences = absentDates(user, taskDates)
               const available = (taskDates.length - absences.length) * dailyMinutes
-              return <div className="task-availability"><p className="helper">{user.name}: {hours(available)} disponibles en estas fechas.</p>{!draft.participant_ids.includes(user.id) && <p className="notice warning">El responsable no está seleccionado como participante.</p>}{absences.length > 0 && <p className="notice warning">La tarjeta coincide con {absences.length} día(s) de ausencia: {absences.map(dateLabel).join(', ')}.</p>}{Number(card.hours) * 60 > available && <p className="notice warning">El esfuerzo supera la disponibilidad del responsable. Ajusta fechas, esfuerzo o responsable.</p>}</div>
+              return <div className="task-availability"><p className="helper">{user.name}: {hours(available)} disponibles en estas fechas.</p>{!draft.participant_ids.includes(user.id) && <p className="notice warning">El responsable no está seleccionado como participante.</p>}{absences.length > 0 && <p className="notice warning">La tarjeta coincide con {absences.length} día(s) de ausencia: {absences.map(dateLabel).join(', ')}.</p>}{card.assigned_to_id === card.development_owner_id && Number(card.hours) * 60 > available && <p className="notice warning">El esfuerzo supera la disponibilidad del responsable. Ajusta fechas, esfuerzo o responsable.</p>}</div>
             })()}
             <label className="completion-checkbox"><input type="checkbox" checked={card.is_completed} onChange={e => updateCard(card.id, { is_completed: e.target.checked })} />Resuelta en este sprint</label>
             <div className="plan-fields"><label>Inicio *<input required type="date" min={draft.start_date || undefined} max={draft.end_date || undefined} value={card.start_date} onChange={e => updateCard(card.id, { start_date: e.target.value })} />{fieldError(`cards.${index}.start_date`)}</label>
@@ -141,7 +141,7 @@ export default function SprintPlanner() {
           </div>)}</div>
           <h3 className="subheading">Agregar desde el backlog</h3>
           <label><span className="sr-only">Buscar tarjetas para el sprint</span><input type="search" placeholder="Buscar tarjeta por título…" value={query} onChange={e => setQuery(e.target.value)} /></label>
-          <div className="backlog">{available.map(card => <div className="backlog-row" key={card.id}><div><strong>AF-{card.id} · {card.title}</strong><span>{card.assigned_to.name || 'Sin asignar'} · {card.status.name || 'Sin estado'}</span></div><button type="button" className="add-card" aria-label={`Agregar ${card.title}`} onClick={() => setDraft(current => ({ ...current, cards: [...current.cards, { id: card.id, title: card.title, start_date: current.start_date, end_date: current.end_date, hours: '', is_completed: false, assigned_to_id: card.assigned_to.id }] }))}>+ Agregar</button></div>)}{!loading && available.length === 0 && <p className="helper">No hay tarjetas disponibles para esta búsqueda. Puedes crear nuevas en Tarjetas.</p>}</div>
+          <div className="backlog">{available.map(card => <div className="backlog-row" key={card.id}><div><strong>AF-{card.id} · {card.title}</strong><span>{card.assigned_to.name || 'Sin asignar'} · {card.status.name || 'Sin estado'}</span></div><button type="button" className="add-card" aria-label={`Agregar ${card.title}`} onClick={() => setDraft(current => ({ ...current, cards: [...current.cards, { id: card.id, title: card.title, start_date: current.start_date, end_date: current.end_date, hours: '', is_completed: false, assigned_to_id: card.workflow.active_owner_id, development_owner_id: card.development_owner_id }] }))}>+ Agregar</button></div>)}{!loading && available.length === 0 && <p className="helper">No hay tarjetas disponibles para esta búsqueda. Puedes crear nuevas en Tarjetas.</p>}</div>
           <button className="primary" type="submit">{saving ? 'Guardando…' : editingId ? 'Guardar cambios del sprint' : 'Crear sprint'}</button>
           <p className="hint">* Obligatorio · Las estimaciones se guardan por sprint.</p>
         </fieldset></form>

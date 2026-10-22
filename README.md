@@ -96,3 +96,23 @@ Solo el rol con slug `developer` aporta horas a la capacidad global. Luis y Fern
 La carga contra esa capacidad incluye el esfuerzo de tarjetas cuyo responsable tiene el rol Desarrollador. Las tarjetas asignadas a otros roles y las que no tienen responsable o roles definidos se muestran aparte. Se conserva el esfuerzo total y el avance general de todas las tarjetas. Los avisos de disponibilidad individual siguen aplicando a testers y otros roles; las tarjetas sin clasificar generan un aviso para completar su asignación.
 
 La clasificación usa los roles y el responsable actuales; no divide automáticamente una tarjeta en fases de desarrollo y testing. La capacidad restante se calcula como capacidad neta de desarrollo menos esfuerzo asignado a desarrolladores. No hace falta una migración nueva para este ajuste.
+
+## Seguimiento por etapas de las tarjetas
+
+El sprint actual muestra contadores por Documentación, Dirección, Desarrollo, Testing y Testing aprobado, además de un aviso y filtro de correcciones. La asociación al sprint sustituye la selección de alcance antes llamada Liberable; no significa que testing haya aprobado la tarjeta ni que esté publicada en producción.
+
+Flujo: Por documentar > En documentación > Por enviar a dirección > En aprobación por dirección > Disponible para desarrollo > En desarrollo > Pendiente de testing > En testing > Aprobada por testing. Desde la revisión de dirección puede regresar a Corregir documentación y desde testing a Corregir desarrollo. Ambas devoluciones requieren observaciones; al reenviar se retira el aviso activo y se conserva la observación en card_workflow_events. Cancelar requiere motivo y conserva la tarjeta y el historial.
+
+Cada tarjeta permite configurar responsables separados para documentación/diseño, seguimiento con dirección, desarrollo y testing. Para iniciar documentación, desarrollo o testing debe existir un responsable para esa fase. El desarrollador debe tener rol developer y el tester rol tester. La capacidad sigue siendo exclusivamente de desarrollo y conserva developer_id como propietario de ese esfuerzo aunque assigned_to cambie a un tester. La disponibilidad de la fase actual toma en cuenta a quien la atiende.
+
+La antigüedad usa requested_at (fecha original de creación) o, si no se proporcionó, created_at. No representa días en una etapa. requested_at no acepta fechas futuras. Las tarjetas existentes inician como Por documentar: no se deducen ni se inventan aprobaciones de etapas a partir de sus estados anteriores. El campo workflow es la fuente del seguimiento detallado; status_id se actualiza al estado general correspondiente cuando ese catálogo exista.
+
+Desde una tarjeta en Inicio o Tarjetas, usa Gestionar etapa y responsables. El historial muestra fechas y observaciones. Como todavía no hay inicio de sesión, los registros no acreditan la identidad de quien registró la aprobación; son seguimiento operativo, no autorización de acceso.
+
+La migración 2026_10_22_000001_add_card_workflow agrega campos de etapas, responsables, fecha original e historial. No crea el módulo de liberaciones a producción.
+
+### Tarjetas de demostración
+
+WorkflowDemoSeeder crea 14 tarjetas ficticias identificadas DEMO-FLOW-001 a DEMO-FLOW-014, con títulos diferentes de los del Excel. Incluyen todas las colas del flujo y dos avisos de correcciones. No tienen enlaces ni identificadores de Jira reales. Cloud y Exe/General usan los proyectos ya existentes; General no se crea como un tercer producto.
+
+Ejecutar: php artisan db:seed --class=WorkflowDemoSeeder (requiere los cuatro perfiles de TeamMemberSeeder). El seeder usa el sprint fijado manualmente, o el que incluya hoy; si no hay ninguno crea un periodo de demostración sin cruzar los existentes. Agrega los cuatro participantes de ejemplo, conserva participantes/tarjetas existentes y fija ese sprint para que el resultado sea visible al inicio. Al repetirlo no duplica tarjetas ni sobrescribe cambios hechos en ellas. No se ejecuta desde DatabaseSeeder para no cargar ejemplos involuntariamente en otras instalaciones.

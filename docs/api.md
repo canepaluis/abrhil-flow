@@ -79,3 +79,13 @@ Solo los participantes con rol developer aportan capacidad de desarrollo; se des
 capacity_minutes, gross_capacity_minutes y absence_minutes se refieren exclusivamente a participantes con rol developer. developer_count indica cuántos aportan capacidad; los roles múltiples no duplican horas. participants[].counts_toward_capacity indica si su disponibilidad se suma al total de desarrollo. Se mantiene la disponibilidad individual de testers y otros roles como información separada.
 
 estimated_minutes conserva el esfuerzo total de todas las tarjetas. development_estimated_minutes suma el esfuerzo asignado a desarrolladores; other_estimated_minutes, el asignado a otros roles definidos; unclassified_estimated_minutes, el de tarjetas sin responsable o sin roles definidos. remaining_minutes = capacity_minutes - development_estimated_minutes. Las tres categorías suman estimated_minutes. cards[].capacity_scope identifica development, other o unclassified. Un desarrollador que no sea participante aporta demanda, pero no capacidad, y conserva el aviso de no pertenecer al sprint.
+
+## Etapas de tarjetas
+
+PUT /api/cards/{card}/workflow actualiza de forma transaccional estado y/o responsables. Cuerpo: state (opcional), note (opcional, obligatoria para devoluciones/cancelación), documenter_id, developer_id, tester_id, approval_owner_id (IDs opcionales anulables), requested_at (fecha original Y-m-d no futura).
+
+Estados: documentation_pending, documentation_in_progress, approval_pending, approval_in_review, development_ready, development_in_progress, testing_pending, testing_in_progress, testing_approved, documentation_corrections, development_corrections, cancelled. No se admiten saltos arbitrarios. Las correcciones de documentación vuelven a approval_pending; las de desarrollo vuelven a testing_pending. No se puede reabrir una tarjeta cancelada desde este flujo.
+
+Respuesta: data.id y data.workflow. workflow se incluye también en tarjetas y en las tarjetas de cada sprint, con estado, etapa, etiqueta, responsables, responsable activo, antigüedad, fecha original, aviso de correcciones, próximas acciones e historial. next_actions contiene las transiciones permitidas para el estado actual. Los errores son 422 por campo. El flujo usa bloqueo de fila para leer el estado actual antes de moverlo y no registra una transición inválida.
+
+CardResource, CardSummaryResource y las tarjetas de SprintResource agregan development_owner_id. Este campo identifica al desarrollador explícito, con fallback a assigned_to para tarjetas anteriores. El cálculo de demanda conserva ese propietario durante testing. El seguimiento detallado no se equipara a una liberación real ni reemplaza la marca histórica is_completed de cada sprint.

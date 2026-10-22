@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/daily-plan', [DailyPlanController::class, 'store']);
 Route::apiResource('cards', CardController::class)->only(['index', 'show', 'store']);
+Route::put('cards/{card}/workflow', [\App\Http\Controllers\Api\CardWorkflowController::class, 'update']);
 Route::get('/card-catalogs', [\App\Http\Controllers\Api\CardCatalogController::class, 'index']);
 Route::get('/users', [\App\Http\Controllers\Api\TeamMemberController::class, 'index']);
 Route::post('users/{user}/time-off', [\App\Http\Controllers\Api\UserTimeOffController::class, 'store']);

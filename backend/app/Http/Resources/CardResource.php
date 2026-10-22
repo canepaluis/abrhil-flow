@@ -20,6 +20,8 @@ class CardResource extends JsonResource
             'description' => $this->description,
             'jira_link' => $this->jira_link,
             'priority' => $this->priority,
+            'workflow' => app(\App\Services\CardWorkflow::class)->describe($this->resource),
+            'development_owner_id' => $this->developer_id ?? $this->assigned_to,
             'card_type' => [
                 'name' => $this->cardType?->name,
                 'description' => $this->cardType?->description
